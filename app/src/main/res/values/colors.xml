@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="skroutz_orange">#FFFF5E00</color>
+    <color name="skroutz_orange_light">#1AFF5E00</color>
+    <color name="skroutz_blue">#FF007BFF</color>
+    <color name="skroutz_dark">#FF1A1A1A</color>
+    <color name="skroutz_gray">#FFF5F5F5</color>
+    <color name="skroutz_border">#FFE0E0E0</color>
+    <color name="skroutz_text_primary">#FF222222</color>
+    <color name="skroutz_text_secondary">#FF757575</color>
+
+    <color name="star_gold">#FFFFB400</color>
+    <color name="light_gray">#FFCCCCCC</color>
+    <color name="success_green">#FF4CAF50</color>
+    <color name="error_red">#FFB00020</color>
+
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+    <color name="transparent">#00000000</color>
+
+    <color name="white_alpha_90">#E6FFFFFF</color>
+</resources>

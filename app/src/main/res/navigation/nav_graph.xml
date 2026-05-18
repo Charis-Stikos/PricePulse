@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.pricepulse.ui.fragments.HomeFragment"
+        android:label="Home">
+        <action
+            android:id="@+id/action_home_to_detail"
+            app:destination="@id/productDetailFragment"/>
+        <action
+            android:id="@+id/action_home_to_search"
+            app:destination="@id/searchFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.pricepulse.ui.fragments.SearchFragment"
+        android:label="Search">
+        <action
+            android:id="@+id/action_search_to_detail"
+            app:destination="@id/productDetailFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/cartFragment"
+        android:name="com.pricepulse.ui.fragments.CartFragment"
+        android:label="Cart"/>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.pricepulse.ui.fragments.ProfileFragment"
+        android:label="Profile">
+        <action
+            android:id="@+id/action_profile_to_detail"
+            app:destination="@id/productDetailFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/productDetailFragment"
+        android:name="com.pricepulse.ui.fragments.ProductDetailFragment"
+        android:label="Product Detail">
+        <argument
+            android:name="productId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null"/>
+        <action
+            android:id="@+id/action_detail_to_profile"
+            app:destination="@id/profileFragment"/>
+    </fragment>
+
+</navigation>

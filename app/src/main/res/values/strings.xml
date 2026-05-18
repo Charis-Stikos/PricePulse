@@ -1,0 +1,74 @@
+<resources>
+    <string name="app_name">PricePulse</string>
+    <string name="search_placeholder">Search in PricePulse...</string>
+    <string name="search_anything">Search for anything...</string>
+    <string name="category_all">All</string>
+    <string name="category_electronics">Electronics</string>
+    <string name="category_fashion">Fashion</string>
+    <string name="category_home">Home</string>
+    <string name="category_sports">Sports</string>
+    <string name="category_beauty">Beauty</string>
+    <string name="category_books">Books</string>
+    <string name="from_label">from</string>
+    <string name="in_stores_format">in %1$d stores</string>
+    <string name="add_to_cart">Add to Cart</string>
+    <string name="total_amount">Total: %.2f €</string>
+
+    <string name="nav_home">Home</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_cart">Cart</string>
+    <string name="nav_profile">Account</string>
+
+    <string name="my_cart">My Cart</string>
+    <string name="total_amount_label">Total Amount</string>
+    <string name="complete_order">Complete Order</string>
+    <string name="empty_cart_title">Your cart is empty</string>
+    <string name="empty_cart_subtitle">Looks like you haven\'t added anything yet</string>
+    <string name="go_shopping">Go Shopping</string>
+    <string name="order_successful">Order Successful!</string>
+    <string name="order_successful_subtitle">Your items will be with you soon.</string>
+    <string name="back_to_home">Back to Home</string>
+
+    <string name="my_account">My Account</string>
+    <string name="wishlist">Wishlist</string>
+    <string name="order_history">Order History</string>
+    <string name="account_settings">Account Settings</string>
+    <string name="help_center">Help Center</string>
+    <string name="gold_member">Gold Member</string>
+    <string name="activity_label">Activity</string>
+    <string name="my_wishlist">My Wishlist</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="welcome_back">Welcome Back</string>
+    <string name="create_account">Create Account</string>
+    <string name="sign_in_subtitle">Sign in to manage your orders</string>
+    <string name="sign_up_subtitle">Join PricePulse to start shopping</string>
+    <string name="email_address">Email Address</string>
+    <string name="password">Password</string>
+    <string name="sign_in">Sign In</string>
+    <string name="register_now">Register Now</string>
+    <string name="toggle_to_register">New user? Create an account</string>
+    <string name="toggle_to_login">Existing user? Sign In</string>
+    <string name="continue_as_guest">Continue as Guest</string>
+    <string name="personal_information">Personal Information</string>
+    <string name="display_name">Display Name</string>
+    <string name="update_profile">Update Profile</string>
+    <string name="faq_title">Frequently Asked Questions</string>
+
+    <string name="popular_searches">Popular Searches</string>
+    <string name="no_products_found">No products found</string>
+    <string name="empty_wishlist_title">Your wishlist is empty</string>
+    <string name="empty_wishlist_subtitle">Save products you like to find them easily.</string>
+    <string name="empty_orders_title">No orders found</string>
+    <string name="empty_orders_subtitle">When you make a purchase, it will appear here.</string>
+
+    <string name="price_from">Price from</string>
+    <string name="customer_reviews">Customer Reviews</string>
+    <string name="description_label">Description</string>
+    <string name="no_reviews">No reviews yet.</string>
+    <string name="product_not_found">Product not found</string>
+
+    <string name="invalid_credentials">Please enter valid email and password (min 6 chars)</string>
+    <string name="display_name_required">Display name cannot be empty</string>
+    <string name="profile_updated">Profile updated</string>
+    <string name="profile_update_failed">Update failed. Please try again.</string>
+</resources>

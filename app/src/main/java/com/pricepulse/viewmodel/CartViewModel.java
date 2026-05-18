@@ -1,0 +1,97 @@
+package com.pricepulse.viewmodel;
+
+import android.os.Handler;
+import android.os.Looper;
+
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.pricepulse.cart.CartManager;
+import com.pricepulse.model.CartItem;
+import com.pricepulse.model.Order;
+import com.pricepulse.repository.FirebaseRepository;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+public class CartViewModel extends ViewModel {
+
+    private final FirebaseRepository repository = new FirebaseRepository();
+    private final CartManager cartManager = CartManager.getInstance();
+    private final Handler handler = new Handler(Looper.getMainLooper());
+
+    private final MutableLiveData<CartUiState> uiState = new MutableLiveData<>(new CartUiState.Idle());
+    private final MediatorLiveData<Double> totalAmount = new MediatorLiveData<>(0.0);
+
+    public CartViewModel() {
+        totalAmount.addSource(cartManager.getItems(), items -> {
+            double total = 0.0;
+            if (items != null) {
+                for (CartItem item : items) total += item.getProductPrice() * item.getQuantity();
+            }
+            totalAmount.setValue(total);
+        });
+    }
+
+    public LiveData<List<CartItem>> getCartItems() {
+        return cartManager.getItems();
+    }
+
+    public LiveData<CartUiState> getUiState() {
+        return uiState;
+    }
+
+    public LiveData<Double> getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void checkout() {
+        List<CartItem> items = cartManager.getItems().getValue();
+        if (items == null || items.isEmpty()) return;
+
+        uiState.setValue(new CartUiState.Processing());
+
+        handler.postDelayed(() -> {
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            Double totalValue = totalAmount.getValue();
+            double total = totalValue != null ? totalValue : 0.0;
+            Order order = new Order(
+                    UUID.randomUUID().toString(),
+                    currentUser != null ? currentUser.getUid() : "anonymous",
+                    new ArrayList<>(items),
+                    total,
+                    "Pending",
+                    System.currentTimeMillis()
+            );
+            repository.saveOrder(order, success -> {
+                if (success) {
+                    cartManager.clearCart();
+                    uiState.setValue(new CartUiState.Success());
+                } else {
+                    uiState.setValue(new CartUiState.Error("Checkout failed. Please try again."));
+                }
+            });
+        }, 1500L);
+    }
+
+    public void resetState() {
+        uiState.setValue(new CartUiState.Idle());
+    }
+
+    public void incrementQuantity(String productId) {
+        cartManager.incrementQuantity(productId);
+    }
+
+    public void decrementQuantity(String productId) {
+        cartManager.removeProduct(productId);
+    }
+
+    public void removeItem(String productId) {
+        cartManager.removeItemCompletely(productId);
+    }
+}
