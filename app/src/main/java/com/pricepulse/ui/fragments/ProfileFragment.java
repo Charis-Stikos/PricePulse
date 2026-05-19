@@ -1,5 +1,7 @@
 package com.pricepulse.ui.fragments;
 
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,7 +17,6 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.viewbinding.ViewBinding;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseUser;
 import com.pricepulse.R;
 import com.pricepulse.databinding.FragmentProfileBinding;
@@ -25,6 +26,7 @@ import com.pricepulse.databinding.ProfileMainBinding;
 import com.pricepulse.databinding.ProfileOrdersBinding;
 import com.pricepulse.databinding.ProfileSettingsBinding;
 import com.pricepulse.databinding.ProfileWishlistBinding;
+import com.pricepulse.model.Order;
 import com.pricepulse.model.Product;
 import com.pricepulse.model.User;
 import com.pricepulse.ui.adapters.FaqAdapter;
@@ -71,15 +73,26 @@ public class ProfileFragment extends Fragment {
         viewModel.getUserProfile().observe(getViewLifecycleOwner(), this::onUserProfileChanged);
 
         viewModel.getIsLoading().observe(getViewLifecycleOwner(), loading -> {
+            boolean isLoading = Boolean.TRUE.equals(loading);
             if (currentSubBinding instanceof ProfileWishlistBinding) {
-                ((ProfileWishlistBinding) currentSubBinding).wishlistProgress
-                        .setVisibility(Boolean.TRUE.equals(loading) ? View.VISIBLE : View.GONE);
+                ProfileWishlistBinding b = (ProfileWishlistBinding) currentSubBinding;
+                b.wishlistProgress.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+                List<Product> items = viewModel.getWishlist().getValue();
+                boolean empty = (items == null || items.isEmpty()) && !isLoading;
+                b.emptyView.getRoot().setVisibility(empty ? View.VISIBLE : View.GONE);
+                b.wishlistRecycler.setVisibility(empty || isLoading ? View.GONE : View.VISIBLE);
             } else if (currentSubBinding instanceof ProfileOrdersBinding) {
-                ((ProfileOrdersBinding) currentSubBinding).ordersProgress
-                        .setVisibility(Boolean.TRUE.equals(loading) ? View.VISIBLE : View.GONE);
+                ProfileOrdersBinding b = (ProfileOrdersBinding) currentSubBinding;
+                b.ordersProgress.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+                List<Order> items = viewModel.getOrderHistory().getValue();
+                boolean empty = (items == null || items.isEmpty()) && !isLoading;
+                b.emptyView.getRoot().setVisibility(empty ? View.VISIBLE : View.GONE);
+                b.ordersRecycler.setVisibility(empty || isLoading ? View.GONE : View.VISIBLE);
             } else if (currentSubBinding instanceof ProfileSettingsBinding) {
-                ((ProfileSettingsBinding) currentSubBinding).updateButton
-                        .setEnabled(!Boolean.TRUE.equals(loading));
+                ProfileSettingsBinding b = (ProfileSettingsBinding) currentSubBinding;
+                b.updateButton.setEnabled(!isLoading);
+                b.updateEmailButton.setEnabled(!isLoading);
+                b.updatePasswordButton.setEnabled(!isLoading);
             }
         });
 
@@ -115,6 +128,32 @@ public class ProfileFragment extends Fragment {
                 case UPDATE_FAILED:
                     Toast.makeText(requireContext(), R.string.profile_update_failed, Toast.LENGTH_SHORT).show();
                     break;
+                case EMAIL_UPDATED:
+                    Toast.makeText(requireContext(), R.string.email_updated, Toast.LENGTH_LONG).show();
+                    if (currentSubBinding instanceof ProfileSettingsBinding) {
+                        ProfileSettingsBinding b = (ProfileSettingsBinding) currentSubBinding;
+                        b.newEmailInput.setText("");
+                        b.emailCurrentPasswordInput.setText("");
+                    }
+                    break;
+                case EMAIL_UPDATE_FAILED:
+                    Toast.makeText(requireContext(), R.string.profile_update_failed, Toast.LENGTH_SHORT).show();
+                    break;
+                case PASSWORD_UPDATED:
+                    Toast.makeText(requireContext(), R.string.password_updated, Toast.LENGTH_SHORT).show();
+                    if (currentSubBinding instanceof ProfileSettingsBinding) {
+                        ProfileSettingsBinding b = (ProfileSettingsBinding) currentSubBinding;
+                        b.passwordCurrentInput.setText("");
+                        b.newPasswordInput.setText("");
+                        b.confirmPasswordInput.setText("");
+                    }
+                    break;
+                case PASSWORD_UPDATE_FAILED:
+                    Toast.makeText(requireContext(), R.string.profile_update_failed, Toast.LENGTH_SHORT).show();
+                    break;
+                case REAUTH_REQUIRED:
+                    Toast.makeText(requireContext(), R.string.reauth_required, Toast.LENGTH_SHORT).show();
+                    break;
             }
         });
     }
@@ -148,10 +187,19 @@ public class ProfileFragment extends Fragment {
                 break;
         }
 
-        binding.toolbar.setNavigationIcon(
-                tab != ProfileTabState.MAIN
-                        ? ContextCompat.getDrawable(requireContext(), R.drawable.ic_arrow_back)
-                        : null);
+        if (tab != ProfileTabState.MAIN) {
+            Drawable backIcon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_arrow_back);
+            if (backIcon != null) {
+                backIcon = backIcon.mutate();
+                backIcon.setColorFilter(
+                        ContextCompat.getColor(requireContext(), R.color.skroutz_text_primary),
+                        PorterDuff.Mode.SRC_IN);
+            }
+            binding.toolbar.setNavigationIcon(backIcon);
+            binding.toolbar.setNavigationContentDescription(R.string.back);
+        } else {
+            binding.toolbar.setNavigationIcon(null);
+        }
 
         binding.profileContentHost.removeAllViews();
         currentSubBinding = null;
@@ -222,6 +270,18 @@ public class ProfileFragment extends Fragment {
         b.rowHelp.optionTitle.setText(R.string.help_center);
         b.rowHelp.getRoot().setOnClickListener(v -> viewModel.setTab(ProfileTabState.HELP_CENTER));
 
+        b.rowAdmin.optionIcon.setImageResource(R.drawable.ic_admin_panel);
+        b.rowAdmin.optionTitle.setText(R.string.admin_dashboard);
+        b.rowAdmin.getRoot().setOnClickListener(v ->
+                NavHostFragment.findNavController(this).navigate(R.id.action_profile_to_admin));
+
+        com.pricepulse.admin.AdminSession.getInstance().isAdmin()
+                .observe(getViewLifecycleOwner(), admin -> {
+                    boolean isAdmin = Boolean.TRUE.equals(admin);
+                    b.rowAdminDivider.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+                    b.rowAdmin.getRoot().setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+                });
+
         b.signOutButton.setOnClickListener(v -> viewModel.getAuthManager().signOut());
     }
 
@@ -245,7 +305,6 @@ public class ProfileFragment extends Fragment {
         setProcessingRef[0] = () -> {
             b.actionButton.setEnabled(!isProcessing[0]);
             b.toggleModeButton.setEnabled(!isProcessing[0]);
-            b.guestButton.setEnabled(!isProcessing[0]);
             b.actionProgress.setVisibility(isProcessing[0] ? View.VISIBLE : View.GONE);
             b.actionButton.setText(isProcessing[0]
                     ? ""
@@ -259,12 +318,6 @@ public class ProfileFragment extends Fragment {
             isLogin[0] = !isLogin[0];
             b.errorText.setVisibility(View.GONE);
             applyMode.run();
-        });
-
-        b.guestButton.setOnClickListener(v -> {
-            if (isProcessing[0]) return;
-            BottomNavigationView bottomNav = requireActivity().findViewById(R.id.bottomNav);
-            if (bottomNav != null) bottomNav.setSelectedItemId(R.id.homeFragment);
         });
 
         b.actionButton.setOnClickListener(v -> {
@@ -354,17 +407,65 @@ public class ProfileFragment extends Fragment {
 
         User profile = viewModel.getUserProfile().getValue();
         b.displayNameInput.setText(profile != null && profile.getDisplayName() != null ? profile.getDisplayName() : "");
-        b.updateButton.setEnabled(!Boolean.TRUE.equals(viewModel.getIsLoading().getValue()));
+
+        FirebaseUser fbUser = viewModel.getAuthManager().getCurrentUserValue();
+        b.currentEmailText.setText(fbUser != null && fbUser.getEmail() != null ? fbUser.getEmail() : "");
+
+        boolean enabled = !Boolean.TRUE.equals(viewModel.getIsLoading().getValue());
+        b.updateButton.setEnabled(enabled);
+        b.updateEmailButton.setEnabled(enabled);
+        b.updatePasswordButton.setEnabled(enabled);
+
+        b.emailSectionHeader.setOnClickListener(v -> toggleSection(b.emailSectionBody, b.emailExpandIcon));
+        b.passwordSectionHeader.setOnClickListener(v -> toggleSection(b.passwordSectionBody, b.passwordExpandIcon));
 
         b.updateButton.setOnClickListener(v -> {
-            String name = b.displayNameInput.getText() != null
-                    ? b.displayNameInput.getText().toString().trim() : "";
+            String name = textOf(b.displayNameInput);
             if (name.isEmpty()) {
                 Toast.makeText(requireContext(), R.string.display_name_required, Toast.LENGTH_SHORT).show();
                 return;
             }
             viewModel.updateDisplayName(name);
         });
+
+        b.updateEmailButton.setOnClickListener(v -> {
+            String newEmail = textOf(b.newEmailInput);
+            String currentPassword = textOf(b.emailCurrentPasswordInput);
+            if (newEmail.isEmpty() || currentPassword.isEmpty()) {
+                Toast.makeText(requireContext(), R.string.all_fields_required, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            viewModel.updateEmail(currentPassword, newEmail);
+        });
+
+        b.updatePasswordButton.setOnClickListener(v -> {
+            String currentPassword = textOf(b.passwordCurrentInput);
+            String newPassword = textOf(b.newPasswordInput);
+            String confirmPassword = textOf(b.confirmPasswordInput);
+            if (currentPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
+                Toast.makeText(requireContext(), R.string.all_fields_required, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (!newPassword.equals(confirmPassword)) {
+                Toast.makeText(requireContext(), R.string.passwords_dont_match, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (newPassword.length() < 6) {
+                Toast.makeText(requireContext(), R.string.invalid_credentials, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            viewModel.updatePassword(currentPassword, newPassword);
+        });
+    }
+
+    private static String textOf(com.google.android.material.textfield.TextInputEditText input) {
+        return input.getText() != null ? input.getText().toString().trim() : "";
+    }
+
+    private void toggleSection(View body, android.widget.ImageView chevron) {
+        boolean expanding = body.getVisibility() != View.VISIBLE;
+        body.setVisibility(expanding ? View.VISIBLE : View.GONE);
+        chevron.animate().rotation(expanding ? 90f : 0f).setDuration(200).start();
     }
 
     private void showHelp() {

@@ -21,8 +21,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Uncomment the line below to seed data to Firestore, then comment it back out.
+        // βγαζω το σχολιο μια φορα για να μπουν τα αρχικα προιοντα στο firestore,
+        // μετα το ξαναβαζω για να μην τρεχει καθε φορα
         // new com.pricepulse.util.FirestoreSeeder().seedData();
+
+        com.pricepulse.admin.AdminSession.getInstance();
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -35,9 +38,12 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = navHost.getNavController();
         NavigationUI.setupWithNavController(binding.bottomNav, navController);
 
-        navController.addOnDestinationChangedListener((controller, destination, arguments) ->
-                binding.bottomNav.setVisibility(
-                        destination.getId() == R.id.productDetailFragment ? View.GONE : View.VISIBLE));
+        navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+            int id = destination.getId();
+            boolean hideBottomNav = id == R.id.productDetailFragment
+                    || id == R.id.adminDashboardFragment;
+            binding.bottomNav.setVisibility(hideBottomNav ? View.GONE : View.VISIBLE);
+        });
 
         CartManager.getInstance().getCartCount().observe(this, count -> {
             if (count != null && count > 0) {

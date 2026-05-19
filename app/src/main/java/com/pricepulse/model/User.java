@@ -8,6 +8,7 @@ public class User {
     private String email = "";
     private String displayName = "";
     private List<String> likedProductIds = new ArrayList<>();
+    private boolean admin = false;
 
     public User() {
     }
@@ -18,6 +19,9 @@ public class User {
         this.displayName = displayName;
         this.likedProductIds = likedProductIds;
     }
+
+    public boolean isAdmin() { return admin; }
+    public void setAdmin(boolean admin) { this.admin = admin; }
 
     public String getUid() { return uid; }
     public void setUid(String uid) { this.uid = uid; }

@@ -6,9 +6,9 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.pricepulse.auth.AuthManager;
 import com.pricepulse.model.Product;
-import com.pricepulse.model.User;
 import com.pricepulse.repository.FirebaseRepository;
 
 import java.util.ArrayList;
@@ -23,6 +23,10 @@ public class ProductDetailViewModel extends ViewModel {
 
     private String currentProductId;
     private List<String> likedProductIds = new ArrayList<>();
+    private Product currentProduct;
+
+    private ListenerRegistration productRegistration;
+    private ListenerRegistration userRegistration;
 
     public LiveData<ProductDetailUiState> getUiState() {
         return uiState;
@@ -40,24 +44,34 @@ public class ProductDetailViewModel extends ViewModel {
         currentProductId = productId;
         uiState.setValue(new ProductDetailUiState.Loading());
 
-        repository.getProductById(productId, product -> {
+        detach();
+
+        productRegistration = repository.listenToProduct(productId, product -> {
             if (product == null) {
                 uiState.setValue(new ProductDetailUiState.Error());
                 return;
             }
-            FirebaseUser user = authManager.getCurrentUserValue();
-            if (user != null && !user.isAnonymous()) {
-                repository.getUserProfile(user.getUid(), profile -> {
-                    likedProductIds = profile != null && profile.getLikedProductIds() != null
-                            ? new ArrayList<>(profile.getLikedProductIds())
-                            : new ArrayList<>();
-                    uiState.setValue(new ProductDetailUiState.Success(product, likedProductIds.contains(productId)));
-                });
-            } else {
-                likedProductIds = new ArrayList<>();
-                uiState.setValue(new ProductDetailUiState.Success(product, false));
-            }
+            currentProduct = product;
+            emitState();
         });
+
+        FirebaseUser user = authManager.getCurrentUserValue();
+        if (user != null && !user.isAnonymous()) {
+            userRegistration = repository.listenToUserProfile(user.getUid(), profile -> {
+                likedProductIds = profile != null && profile.getLikedProductIds() != null
+                        ? new ArrayList<>(profile.getLikedProductIds())
+                        : new ArrayList<>();
+                emitState();
+            });
+        } else {
+            likedProductIds = new ArrayList<>();
+        }
+    }
+
+    private void emitState() {
+        if (currentProduct == null || currentProductId == null) return;
+        uiState.setValue(new ProductDetailUiState.Success(
+                currentProduct, likedProductIds.contains(currentProductId)));
     }
 
     public void toggleLike() {
@@ -72,11 +86,7 @@ public class ProductDetailViewModel extends ViewModel {
         } else {
             likedProductIds.add(productId);
         }
-
-        ProductDetailUiState current = uiState.getValue();
-        if (current instanceof ProductDetailUiState.Success) {
-            uiState.setValue(((ProductDetailUiState.Success) current).withLiked(!wasLiked));
-        }
+        emitState();
 
         repository.updateWishlist(user.getUid(), new ArrayList<>(likedProductIds), success -> {
             if (!success) {
@@ -85,11 +95,25 @@ public class ProductDetailViewModel extends ViewModel {
                 } else {
                     likedProductIds.remove(productId);
                 }
-                ProductDetailUiState rolledBack = uiState.getValue();
-                if (rolledBack instanceof ProductDetailUiState.Success) {
-                    uiState.setValue(((ProductDetailUiState.Success) rolledBack).withLiked(wasLiked));
-                }
+                emitState();
             }
         });
+    }
+
+    private void detach() {
+        if (productRegistration != null) {
+            productRegistration.remove();
+            productRegistration = null;
+        }
+        if (userRegistration != null) {
+            userRegistration.remove();
+            userRegistration = null;
+        }
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        detach();
     }
 }

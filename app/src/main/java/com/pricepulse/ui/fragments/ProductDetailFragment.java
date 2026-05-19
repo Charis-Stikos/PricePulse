@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -134,7 +136,60 @@ public class ProductDetailFragment extends Fragment {
             }
         }
 
-        binding.addToCartButton.setOnClickListener(v -> CartManager.getInstance().addProduct(p));
+        binding.addToCartButton.setOnClickListener(v -> {
+            CartManager.getInstance().addProduct(p);
+            showAddedToCartAnimation();
+        });
+    }
+
+    private void showAddedToCartAnimation() {
+        if (binding == null) return;
+        View overlay = binding.addedToCartOverlay;
+        overlay.animate().cancel();
+        overlay.setVisibility(View.VISIBLE);
+        overlay.setAlpha(0f);
+        overlay.setScaleX(0.6f);
+        overlay.setScaleY(0.6f);
+        overlay.setTranslationY(30f);
+        overlay.animate()
+                .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .translationY(0f)
+                .setDuration(220)
+                .setInterpolator(new OvershootInterpolator(1.4f))
+                .withEndAction(() -> overlay.postDelayed(this::hideAddedToCartAnimation, 900))
+                .start();
+
+        binding.addToCartButton.animate().cancel();
+        binding.addToCartButton.setScaleX(1f);
+        binding.addToCartButton.setScaleY(1f);
+        binding.addToCartButton.animate()
+                .scaleX(0.94f).scaleY(0.94f)
+                .setDuration(120)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .withEndAction(() -> {
+                    if (binding == null) return;
+                    binding.addToCartButton.animate()
+                            .scaleX(1f).scaleY(1f)
+                            .setDuration(160)
+                            .setInterpolator(new OvershootInterpolator(2f))
+                            .start();
+                })
+                .start();
+    }
+
+    private void hideAddedToCartAnimation() {
+        if (binding == null) return;
+        binding.addedToCartOverlay.animate()
+                .alpha(0f)
+                .translationY(30f)
+                .setDuration(220)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .withEndAction(() -> {
+                    if (binding != null) binding.addedToCartOverlay.setVisibility(View.GONE);
+                })
+                .start();
     }
 
     private void bindReview(ItemReviewBinding b, Review review, int gold, int gray) {

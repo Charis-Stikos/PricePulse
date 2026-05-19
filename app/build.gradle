@@ -49,28 +49,30 @@ dependencies {
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
-    // Lifecycle
+    // για lifecycle (viewmodels, livedata)
     implementation 'androidx.lifecycle:lifecycle-runtime:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-livedata:2.7.0'
     implementation 'androidx.fragment:fragment:1.6.2'
     implementation 'androidx.activity:activity:1.8.2'
 
-    // Navigation
+    // για navigation αναμεσα στα fragments
     implementation 'androidx.navigation:navigation-fragment:2.7.7'
     implementation 'androidx.navigation:navigation-ui:2.7.7'
 
-    // Firebase
+    // firebase (auth + firestore + storage για εικονες)
     implementation platform('com.google.firebase:firebase-bom:33.5.1')
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-storage'
 
-    // Glide (image loading)
+    // glide για να φορτωνουμε εικονες απο url
     implementation 'com.github.bumptech.glide:glide:4.16.0'
 
-    // Shimmer
+    // shimmer για το loading placeholder
     implementation 'com.facebook.shimmer:shimmer:0.5.0'
+    implementation 'com.google.firebase:firebase-storage:22.0.1'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
