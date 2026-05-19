@@ -21,8 +21,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // βγαζω το σχολιο μια φορα για να μπουν τα αρχικα προιοντα στο firestore,
-        // μετα το ξαναβαζω για να μην τρεχει καθε φορα
+        // βγάζω το σχόλιο μια φορά για να μπουν τα αρχικά προϊόντα στο firestore,
+        // Μέτα το ξαναβάζω για να μην τρέχει κάθε φορά
         // new com.pricepulse.util.FirestoreSeeder().seedData();
 
         com.pricepulse.admin.AdminSession.getInstance();
