@@ -8,9 +8,9 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.pricepulse.databinding.ItemCartBinding;
 import com.pricepulse.model.CartItem;
+import com.pricepulse.util.ImageLoader;
 
 public class CartAdapter extends ListAdapter<CartItem, CartAdapter.VH> {
 
@@ -43,7 +43,7 @@ public class CartAdapter extends ListAdapter<CartItem, CartAdapter.VH> {
         b.itemTitle.setText(item.getProductTitle());
         b.itemPrice.setText(item.getProductPrice() + " €");
         b.quantityText.setText(String.valueOf(item.getQuantity()));
-        Glide.with(b.itemImage).load(item.getProductImageUrl()).into(b.itemImage);
+        ImageLoader.load(b.itemImage, item.getProductImageUrl());
         b.incrementButton.setOnClickListener(v -> onIncrement.onAction(item.getProductId()));
         b.decrementButton.setOnClickListener(v -> onDecrement.onAction(item.getProductId()));
         b.removeButton.setOnClickListener(v -> onRemove.onAction(item.getProductId()));

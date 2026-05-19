@@ -8,9 +8,9 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.pricepulse.databinding.ItemWishlistBinding;
 import com.pricepulse.model.Product;
+import com.pricepulse.util.ImageLoader;
 
 public class WishlistAdapter extends ListAdapter<Product, WishlistAdapter.VH> {
 
@@ -38,7 +38,7 @@ public class WishlistAdapter extends ListAdapter<Product, WishlistAdapter.VH> {
         ItemWishlistBinding b = holder.b;
         b.wishTitle.setText(p.getTitle());
         b.wishPrice.setText(p.getPrice() + " €");
-        Glide.with(b.wishImage).load(p.getImageUrl()).into(b.wishImage);
+        ImageLoader.load(b.wishImage, p.getImageUrl());
         b.rootClick.setOnClickListener(v -> onClick.onClick(p));
     }
 

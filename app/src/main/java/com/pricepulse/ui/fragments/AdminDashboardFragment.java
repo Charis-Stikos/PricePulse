@@ -22,7 +22,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.viewbinding.ViewBinding;
 
-import com.bumptech.glide.Glide;
+import com.pricepulse.util.ImageLoader;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -83,7 +83,7 @@ public class AdminDashboardFragment extends Fragment {
                 pickedImageUri = uri;
                 AdminAddProductBinding b = (AdminAddProductBinding) currentSubBinding;
                 b.productImageUrlInput.setText("");
-                Glide.with(requireContext()).load(uri).into(b.productImagePreview);
+                ImageLoader.load(b.productImagePreview, uri);
                 b.productImageEmpty.setVisibility(View.GONE);
             }
         });
@@ -226,7 +226,7 @@ public class AdminDashboardFragment extends Fragment {
         b.productCategoryInput.setAdapter(categoryAdapter);
 
         if (pickedImageUri != null) {
-            Glide.with(requireContext()).load(pickedImageUri).into(b.productImagePreview);
+            ImageLoader.load(b.productImagePreview, pickedImageUri);
             b.productImageEmpty.setVisibility(View.GONE);
         } else {
             b.productImageEmpty.setVisibility(View.VISIBLE);
@@ -241,7 +241,7 @@ public class AdminDashboardFragment extends Fragment {
                 String url = s.toString().trim();
                 if (!url.isEmpty()) {
                     pickedImageUri = null;
-                    Glide.with(requireContext()).load(url).into(b.productImagePreview);
+                    ImageLoader.load(b.productImagePreview, url);
                     b.productImageEmpty.setVisibility(View.GONE);
                 } else if (pickedImageUri == null) {
                     b.productImagePreview.setImageDrawable(null);

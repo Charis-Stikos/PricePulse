@@ -18,7 +18,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.bumptech.glide.Glide;
+import com.pricepulse.util.ImageLoader;
 import com.google.firebase.auth.FirebaseUser;
 import com.pricepulse.R;
 import com.pricepulse.cart.CartManager;
@@ -99,7 +99,7 @@ public class ProductDetailFragment extends Fragment {
         binding.detailRating.setText(String.format(Locale.getDefault(), "%.1f", p.getRating()));
         binding.detailReviewCount.setText(" (" + p.getReviewCount() + " Reviews)");
         binding.detailPrice.setText(String.format(Locale.getDefault(), "%.2f €", p.getPrice()));
-        Glide.with(binding.detailImage).load(p.getImageUrl()).into(binding.detailImage);
+        ImageLoader.load(binding.detailImage, p.getImageUrl());
 
         ImageView[] stars = {binding.dStar1, binding.dStar2, binding.dStar3, binding.dStar4, binding.dStar5};
         int gold = ContextCompat.getColor(ctx, R.color.star_gold);

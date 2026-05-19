@@ -10,8 +10,8 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.pricepulse.R;
+import com.pricepulse.util.ImageLoader;
 import com.pricepulse.databinding.ItemProductBinding;
 import com.pricepulse.databinding.ItemProductShimmerBinding;
 import com.pricepulse.model.Product;
@@ -95,7 +95,7 @@ public class ProductAdapter extends ListAdapter<ProductListItem, RecyclerView.Vi
             for (int i = 0; i < stars.length; i++) {
                 stars[i].setColorFilter(i < filled ? gold : gray);
             }
-            Glide.with(b.productImage).load(p.getImageUrl()).into(b.productImage);
+            ImageLoader.load(b.productImage, p.getImageUrl());
             b.rootClick.setOnClickListener(v -> onClick.onClick(p));
         }
     }
