@@ -27,9 +27,13 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.pricepulse.R;
+import com.pricepulse.model.Order;
+import com.pricepulse.model.User;
 import com.pricepulse.databinding.AdminAddProductBinding;
 import com.pricepulse.databinding.AdminManageAdminsBinding;
 import com.pricepulse.databinding.AdminOrdersBinding;
+import com.pricepulse.databinding.AdminOverviewBinding;
+import com.pricepulse.databinding.AdminShopDetailsBinding;
 import com.pricepulse.databinding.FragmentAdminDashboardBinding;
 import com.pricepulse.model.Product;
 import com.pricepulse.ui.adapters.AdminOrderAdapter;
@@ -49,6 +53,9 @@ public class AdminDashboardFragment extends Fragment {
     private AdminUserAdapter adminUserAdapter;
     private Uri pickedImageUri;
     private ActivityResultLauncher<String> imagePicker;
+    private List<Order> cachedOrders = new ArrayList<>();
+    private List<User> cachedAdmins = new ArrayList<>();
+    private String selectedOrderFilter = "All";
 
     private static final List<String> CATEGORIES = Arrays.asList(
             "Electronics", "Fashion", "Home", "Sports", "Beauty", "Books");
@@ -138,8 +145,11 @@ public class AdminDashboardFragment extends Fragment {
         });
 
         viewModel.getAdmins().observe(getViewLifecycleOwner(), admins -> {
+            cachedAdmins = admins == null ? new ArrayList<>() : new ArrayList<>(admins);
+
             if (currentSubBinding instanceof AdminManageAdminsBinding && adminUserAdapter != null) {
                 AdminManageAdminsBinding b = (AdminManageAdminsBinding) currentSubBinding;
+
                 adminUserAdapter.submitList(admins == null ? new ArrayList<>() : new ArrayList<>(admins));
                 b.adminsEmpty.setVisibility(admins == null || admins.isEmpty() ? View.VISIBLE : View.GONE);
             }
@@ -156,8 +166,13 @@ public class AdminDashboardFragment extends Fragment {
         });
 
         viewModel.getOrders().observe(getViewLifecycleOwner(), orders -> {
+            cachedOrders = orders == null ? new ArrayList<>() : new ArrayList<>(orders);
+
             if (currentSubBinding instanceof AdminOrdersBinding && orderAdapter != null) {
                 AdminOrdersBinding b = (AdminOrdersBinding) currentSubBinding;
+
+                applyOrderFilter();
+
                 orderAdapter.submitList(orders == null ? new ArrayList<>() : new ArrayList<>(orders));
                 boolean loading = Boolean.TRUE.equals(viewModel.getOrdersLoading().getValue());
                 b.adminOrdersEmpty.setVisibility(
@@ -190,9 +205,45 @@ public class AdminDashboardFragment extends Fragment {
         currentSubBinding = null;
         orderAdapter = null;
         adminUserAdapter = null;
-        if (position == 0) showOrders();
-        else if (position == 1) showAddProduct();
-        else showManageAdmins();
+        if (position == 0) showOverview();
+        else if (position == 1) showShopDetails();
+        else if (position == 2) showOrders();
+        else if (position == 3) showAddProduct();
+        else if (position == 4) showManageAdmins();
+    }
+
+    private void showOverview() {
+        AdminOverviewBinding b = AdminOverviewBinding.inflate(
+                LayoutInflater.from(requireContext()),
+                binding.adminContent,
+                false
+        );
+
+        binding.adminContent.addView(b.getRoot());
+        currentSubBinding = b;
+    }
+
+    private void showShopDetails() {
+        AdminShopDetailsBinding b = AdminShopDetailsBinding.inflate(
+                LayoutInflater.from(requireContext()),
+                binding.adminContent,
+                false
+        );
+
+        binding.adminContent.addView(b.getRoot());
+        currentSubBinding = b;
+
+        // UI-only for now.
+        // Later, connect the logic that can read these fields:
+        // b.shopNameInput
+        // b.shopDescriptionInput
+        // b.shopCategoryDropdown
+        // b.shopEmailInput
+        // b.shopPhoneInput
+        // b.shopAddressInput
+        // b.openingHoursInput
+        // b.deliveryOptionsInput
+        // b.saveShopDetailsButton
     }
 
     private void showOrders() {
@@ -211,6 +262,13 @@ public class AdminDashboardFragment extends Fragment {
         });
         b.adminOrdersRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         b.adminOrdersRecycler.setAdapter(orderAdapter);
+
+        setupOrderFilters(b);
+        applyOrderFilter();
+
+        boolean loading = Boolean.TRUE.equals(viewModel.getOrdersLoading().getValue());
+        b.adminOrdersProgress.setVisibility(loading ? View.VISIBLE : View.GONE);
+        b.adminOrdersEmpty.setVisibility(cachedOrders.isEmpty() && !loading ? View.VISIBLE : View.GONE);
 
         viewModel.loadOrders();
     }
@@ -299,6 +357,9 @@ public class AdminDashboardFragment extends Fragment {
         b.adminsRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         b.adminsRecycler.setAdapter(adminUserAdapter);
 
+        adminUserAdapter.submitList(new ArrayList<>(cachedAdmins));
+        b.adminsEmpty.setVisibility(cachedAdmins.isEmpty() ? View.VISIBLE : View.GONE);
+
         b.promoteAdminButton.setOnClickListener(v -> {
             String email = text(b.adminEmailInput);
             if (email.isEmpty()) {
@@ -322,6 +383,62 @@ public class AdminDashboardFragment extends Fragment {
         pickedImageUri = null;
         b.productImagePreview.setImageDrawable(null);
         b.productImageEmpty.setVisibility(View.VISIBLE);
+    }
+
+    private void setupOrderFilters(AdminOrdersBinding b) {
+        b.filterAll.setOnClickListener(v -> {
+            selectedOrderFilter = "All";
+            applyOrderFilter();
+        });
+
+        b.filterPending.setOnClickListener(v -> {
+            selectedOrderFilter = AdminOrderAdapter.STATUS_PENDING;
+            applyOrderFilter();
+        });
+
+        b.filterCompleted.setOnClickListener(v -> {
+            selectedOrderFilter = AdminOrderAdapter.STATUS_COMPLETED;
+            applyOrderFilter();
+        });
+    }
+
+    private void applyOrderFilter() {
+        if (!(currentSubBinding instanceof AdminOrdersBinding) || orderAdapter == null) return;
+
+        AdminOrdersBinding b = (AdminOrdersBinding) currentSubBinding;
+
+        List<Order> filtered = new ArrayList<>();
+
+        for (Order order : cachedOrders) {
+            if ("All".equals(selectedOrderFilter)) {
+                filtered.add(order);
+            } else if (order.getStatus() != null && order.getStatus().equals(selectedOrderFilter)) {
+                filtered.add(order);
+            }
+        }
+
+        orderAdapter.submitList(filtered);
+
+        b.adminOrdersEmpty.setVisibility(filtered.isEmpty() ? View.VISIBLE : View.GONE);
+
+        updateFilterChipStyles(b);
+    }
+
+    private void updateFilterChipStyles(AdminOrdersBinding b) {
+        setChipSelected(b.filterAll, "All".equals(selectedOrderFilter));
+        setChipSelected(b.filterPending, AdminOrderAdapter.STATUS_PENDING.equals(selectedOrderFilter));
+        setChipSelected(b.filterCompleted, AdminOrderAdapter.STATUS_COMPLETED.equals(selectedOrderFilter));
+    }
+
+    private void setChipSelected(android.widget.TextView chip, boolean selected) {
+        chip.setTextColor(ContextCompat.getColor(
+                requireContext(),
+                selected ? R.color.white : R.color.skroutz_text_primary
+        ));
+
+        chip.setBackgroundResource(
+                selected ? R.drawable.bg_chip_selected : R.drawable.bg_chip_unselected
+        );
     }
 
     private static String text(android.widget.EditText input) {

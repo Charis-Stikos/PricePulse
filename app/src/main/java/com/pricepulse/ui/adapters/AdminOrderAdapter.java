@@ -27,6 +27,7 @@ public class AdminOrderAdapter extends ListAdapter<Order, AdminOrderAdapter.VH> 
     public static final String STATUS_PENDING = "Pending";
     public static final String STATUS_IN_TRANSIT = "In Transit";
     public static final String STATUS_COMPLETED = "Completed";
+    private String expandedOrderId = null;
 
     private final OnStatusChange listener;
 
@@ -83,6 +84,27 @@ public class AdminOrderAdapter extends ListAdapter<Order, AdminOrderAdapter.VH> 
             }
             b.adminOrderItems.setText(items.toString());
 
+            boolean expanded = order.getId() != null && order.getId().equals(expandedOrderId);
+            b.adminOrderDetailsContainer.setVisibility(expanded ? android.view.View.VISIBLE : android.view.View.GONE);
+            b.adminOrderViewBtn.setText(expanded
+                    ? b.getRoot().getContext().getString(R.string.hide_order)
+                    : b.getRoot().getContext().getString(R.string.view_order));
+
+            b.adminOrderDetailsItems.setText(buildOrderDetails(order));
+
+            b.adminOrderViewBtn.setOnClickListener(v -> {
+                if (order.getId() != null && order.getId().equals(expandedOrderId)) {
+                    expandedOrderId = null;
+                } else {
+                    expandedOrderId = order.getId();
+                }
+
+                int pos = getBindingAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION) {
+                    notifyItemChanged(pos);
+                }
+            });
+
             applyStatusStyle(order.getStatus());
 
             b.adminOrderUpdateBtn.setOnClickListener(v -> {
@@ -112,6 +134,28 @@ public class AdminOrderAdapter extends ListAdapter<Order, AdminOrderAdapter.VH> 
             int color = ContextCompat.getColor(b.getRoot().getContext(), colorRes);
             b.adminOrderStatusChip.getBackground().mutate()
                     .setColorFilter(color, PorterDuff.Mode.SRC_IN);
+        }
+
+        private String buildOrderDetails(Order order) {
+            StringBuilder details = new StringBuilder();
+
+            if (order.getItems() == null || order.getItems().isEmpty()) {
+                return "No items available";
+            }
+
+            for (CartItem ci : order.getItems()) {
+                double lineTotal = ci.getProductPrice() * ci.getQuantity();
+
+                details.append("• ")
+                        .append(ci.getQuantity())
+                        .append("× ")
+                        .append(ci.getProductTitle())
+                        .append(" — ")
+                        .append(String.format(Locale.getDefault(), "%.2f €", lineTotal))
+                        .append("\n");
+            }
+
+            return details.toString().trim();
         }
 
         private String shortId(String id) {

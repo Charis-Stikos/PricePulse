@@ -55,7 +55,9 @@ public class CartFragment extends Fragment {
             viewModel.resetState();
             NavHostFragment.findNavController(this).navigate(R.id.homeFragment);
         });
-        binding.checkoutButton.setOnClickListener(v -> viewModel.checkout());
+        binding.checkoutButton.setOnClickListener(v ->
+                NavHostFragment.findNavController(this).navigate(R.id.action_cart_to_checkout)
+        );
 
         viewModel.getCartItems().observe(getViewLifecycleOwner(), cartAdapter::submitList);
         viewModel.getTotalAmount().observe(getViewLifecycleOwner(), total ->

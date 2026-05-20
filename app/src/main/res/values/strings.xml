@@ -89,7 +89,6 @@
     <string name="admin_orders">Manage Orders</string>
     <string name="admin_add_product">Add Product</string>
     <string name="status_pending">Pending</string>
-    <string name="status_in_transit">In Transit</string>
     <string name="status_completed">Completed</string>
     <string name="status_label">Status</string>
     <string name="update_status">Update Status</string>
@@ -121,4 +120,66 @@
     <string name="admin_current_admins">Current admins</string>
     <string name="no_admins">No admins yet</string>
     <string name="confirm_revoke_admin">Revoke admin from %1$s?</string>
+
+    //this new strings
+    <string name="admin_overview">Overview</string>
+    <string name="admin_shop_details">Shop Details</string>
+    <string name="admin_privilages">Manage Admin</string>
+    <string name="checkout_title">Checkout</string>
+
+    <string name="welcome_manager">Welcome back</string>
+    <string name="sample_shop_name">Tech Store</string>
+    <string name="shop_status_active">Active Shop</string>
+    <string name="dashboard_overview">Overview</string>
+    <string name="products_label">Products</string>
+    <string name="pending_orders_label">Pending Orders</string>
+    <string name="monthly_revenue_label">Monthly Revenue</string>
+    <string name="shop_rating_label">Shop Rating</string>
+
+    <string name="shop_details_subtitle">Manage how your shop appears to customers</string>
+    <string name="basic_information">Basic Information</string>
+    <string name="contact_information">Contact Information</string>
+    <string name="business_information">Business Information</string>
+    <string name="shop_name_hint">Shop name</string>
+    <string name="shop_description_hint">Shop description</string>
+    <string name="shop_category_hint">Main category</string>
+    <string name="shop_email_hint">Business email</string>
+    <string name="shop_phone_hint">Phone number</string>
+    <string name="shop_address_hint">Shop address</string>
+    <string name="opening_hours_hint">Opening hours</string>
+    <string name="delivery_options_hint">Delivery options</string>
+    <string name="sample_shop_description">Electronics, accessories and smart devices for everyday use.</string>
+    <string name="sample_shop_email">contact@techstore.com</string>
+    <string name="sample_shop_phone">+30 210 000 0000</string>
+    <string name="sample_shop_address">12 Market Street, Athens</string>
+    <string name="sample_opening_hours">Monday - Friday, 09:00 - 18:00</string>
+    <string name="sample_delivery_options">Courier delivery and in-store pickup available</string>
+    <string name="save_shop_details">Save Shop Details</string>
+
+    <string name="orders_overview">Orders Overview</string>
+    <string name="orders_overview_subtitle">Track incoming orders and update their status.</string>
+    <string name="total_orders_label">Total Orders</string>
+    <string name="pending_label">Pending</string>
+    <string name="completed_label">Completed</string>
+    <string name="filter_all">All</string>
+    <string name="recent_orders">Recent Orders</string>
+    <string name="order_total_label">Order Total</string>
+    <string name="view_order">View Order</string>
+
+    <string name="order_summary">Order Summary</string>
+    <string name="items_subtotal">Items Subtotal</string>
+    <string name="delivery_fee">Delivery Fee</string>
+    <string name="delivery_details">Delivery Details</string>
+    <string name="full_name_hint">Full name</string>
+    <string name="phone_number_hint">Phone number</string>
+    <string name="address_hint">Address</string>
+    <string name="city_hint">City</string>
+    <string name="postal_code_hint">Postal code</string>
+    <string name="payment_method">Payment Method</string>
+    <string name="credit_debit_card">Credit / Debit Card</string>
+    <string name="cash_on_delivery">Cash on Delivery</string>
+    <string name="place_order">Place Order</string>
+
+    <string name="order_items">Order Items</string>
+    <string name="hide_order">Hide Order</string>
 </resources>

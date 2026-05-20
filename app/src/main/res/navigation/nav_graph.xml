@@ -28,7 +28,12 @@
     <fragment
         android:id="@+id/cartFragment"
         android:name="com.pricepulse.ui.fragments.CartFragment"
-        android:label="Cart"/>
+        android:label="Cart">
+
+        <action
+            android:id="@+id/action_cart_to_checkout"
+            app:destination="@id/checkoutFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/profileFragment"
@@ -60,5 +65,10 @@
             android:id="@+id/action_detail_to_profile"
             app:destination="@id/profileFragment"/>
     </fragment>
+
+    <fragment
+        android:id="@+id/checkoutFragment"
+        android:name="com.pricepulse.ui.fragments.CheckoutFragment"
+        android:label="Checkout" />
 
 </navigation>
