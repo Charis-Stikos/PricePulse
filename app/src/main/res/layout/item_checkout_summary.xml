@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/checkoutItemRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="8dp">
+
+    <ImageView
+        android:id="@+id/checkoutItemImage"
+        android:layout_width="58dp"
+        android:layout_height="58dp"
+        android:background="@drawable/bg_rounded_image"
+        android:padding="6dp"
+        android:scaleType="fitCenter" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="12dp">
+
+        <TextView
+            android:id="@+id/checkoutItemTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Product name"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/skroutz_text_primary" />
+
+        <TextView
+            android:id="@+id/checkoutItemQuantity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="Qty: 1"
+            android:textSize="12sp"
+            android:textColor="@color/skroutz_text_secondary" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/checkoutItemPrice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="€0.00"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/skroutz_text_primary" />
+
+</LinearLayout>

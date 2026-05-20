@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/skroutz_gray">
+
+    <!-- TOP TOOLBAR -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/checkoutToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/white"
+        android:elevation="2dp"
+        android:contentInsetStartWithNavigation="0dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <ImageButton
+                android:id="@+id/backButton"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_arrow_back"
+                android:padding="10dp"
+                app:tint="@color/skroutz_text_primary" />
+
+            <TextView
+                android:id="@+id/checkoutToolbarTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/checkout_title"
+                android:textStyle="bold"
+                android:textSize="20sp"
+                android:textColor="@color/skroutz_text_primary" />
+
+        </LinearLayout>
+
+    </androidx.appcompat.widget.Toolbar>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:paddingBottom="96dp">
+
+            <!-- ORDER SUMMARY TITLE -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/order_summary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/skroutz_text_secondary" />
+
+            <!-- ORDER SUMMARY CARD -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/orderSummaryCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/checkoutItemsRecycler"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        android:clipToPadding="false" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="12dp"
+                        android:background="@color/skroutz_gray" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/items_subtotal"
+                            android:textSize="14sp"
+                            android:textColor="@color/skroutz_text_secondary" />
+
+                        <TextView
+                            android:id="@+id/subtotalAmountText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="€245.90"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/skroutz_text_primary" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/delivery_fee"
+                            android:textSize="14sp"
+                            android:textColor="@color/skroutz_text_secondary" />
+
+                        <TextView
+                            android:id="@+id/deliveryFeeText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="€3.50"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/skroutz_text_primary" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- DELIVERY DETAILS TITLE -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/delivery_details"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/skroutz_text_secondary" />
+
+            <!-- DELIVERY FORM CARD -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/deliveryDetailsCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/fullNameInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/full_name_hint"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeColor="@color/skroutz_border"
+                        app:hintTextColor="@color/skroutz_text_secondary">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/fullNameInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapWords"
+                            android:maxLines="1"
+                            android:textColor="@color/skroutz_text_primary"
+                            android:textColorHint="@color/skroutz_text_secondary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/phoneInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:hint="@string/phone_number_hint"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeColor="@color/skroutz_border"
+                        app:hintTextColor="@color/skroutz_text_secondary">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/phoneInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="phone"
+                            android:maxLines="1"
+                            android:textColor="@color/skroutz_text_primary"
+                            android:textColorHint="@color/skroutz_text_secondary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/addressInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:hint="@string/address_hint"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeColor="@color/skroutz_border"
+                        app:hintTextColor="@color/skroutz_text_secondary">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/addressInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textPostalAddress|textCapSentences"
+                            android:maxLines="2"
+                            android:textColor="@color/skroutz_text_primary"
+                            android:textColorHint="@color/skroutz_text_secondary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="14dp">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/cityInputLayout"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="6dp"
+                            android:hint="@string/city_hint"
+                            app:boxCornerRadiusTopStart="12dp"
+                            app:boxCornerRadiusTopEnd="12dp"
+                            app:boxCornerRadiusBottomStart="12dp"
+                            app:boxCornerRadiusBottomEnd="12dp"
+                            app:boxStrokeColor="@color/skroutz_border"
+                            app:hintTextColor="@color/skroutz_text_secondary">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/cityInput"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textCapWords"
+                                android:maxLines="1"
+                                android:textColor="@color/skroutz_text_primary"
+                                android:textColorHint="@color/skroutz_text_secondary" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/postalCodeInputLayout"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="6dp"
+                            android:hint="@string/postal_code_hint"
+                            app:boxCornerRadiusTopStart="12dp"
+                            app:boxCornerRadiusTopEnd="12dp"
+                            app:boxCornerRadiusBottomStart="12dp"
+                            app:boxCornerRadiusBottomEnd="12dp"
+                            app:boxStrokeColor="@color/skroutz_border"
+                            app:hintTextColor="@color/skroutz_text_secondary">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/postalCodeInput"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number"
+                                android:maxLines="1"
+                                android:textColor="@color/skroutz_text_primary"
+                                android:textColorHint="@color/skroutz_text_secondary" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- PAYMENT METHOD TITLE -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/payment_method"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/skroutz_text_secondary" />
+
+            <!-- PAYMENT METHOD CARD -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/paymentMethodCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- CARD PAYMENT -->
+                    <LinearLayout
+                        android:id="@+id/cardPaymentOption"
+                        android:layout_width="match_parent"
+                        android:layout_height="64dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="18dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
+
+                        <TextView
+                            android:id="@+id/cardPaymentRadio"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:gravity="center"
+                            android:text="●"
+                            android:textSize="14sp"
+                            android:textColor="@color/skroutz_orange" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="14dp"
+                            android:text="@string/credit_debit_card"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/skroutz_text_primary" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Card"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/skroutz_blue" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.5dp"
+                        android:layout_marginHorizontal="18dp"
+                        android:background="@color/skroutz_gray" />
+
+                    <!-- CASH ON DELIVERY -->
+                    <LinearLayout
+                        android:id="@+id/cashOnDeliveryOption"
+                        android:layout_width="match_parent"
+                        android:layout_height="64dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="18dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
+
+                        <TextView
+                            android:id="@+id/cashPaymentRadio"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:gravity="center"
+                            android:text="○"
+                            android:textSize="14sp"
+                            android:textColor="@color/skroutz_text_secondary" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="14dp"
+                            android:text="@string/cash_on_delivery"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/skroutz_text_primary" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="COD"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/skroutz_text_secondary" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- BOTTOM TOTAL AREA -->
+    <LinearLayout
+        android:id="@+id/checkoutBottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:elevation="16dp"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="14dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/total_amount_label"
+                android:textSize="15sp"
+                android:textColor="@color/skroutz_text_secondary" />
+
+            <TextView
+                android:id="@+id/finalTotalAmountText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="€249.40"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/skroutz_text_primary" />
+
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/placeOrderButton"
+            style="@style/Widget.App.OrangeButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="@string/place_order"
+            android:textSize="17sp" />
+
+    </LinearLayout>
+
+</LinearLayout>
