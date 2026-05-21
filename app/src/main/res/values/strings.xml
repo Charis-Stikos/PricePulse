@@ -195,4 +195,7 @@
     <string name="location_discount_not_checked">Location discount has not been checked yet.</string>
     <string name="verify_delivery_address">Verify Delivery Address</string>
     <string name="location_discount_applied">Location Discount</string>
+
+    <string name="location_permission_granted">Location permission granted. Address verification will be available next.</string>
+    <string name="location_permission_denied">Location permission denied. Delivery discount cannot be checked.</string>
 </resources>

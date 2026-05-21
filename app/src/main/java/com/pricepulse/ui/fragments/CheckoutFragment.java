@@ -16,6 +16,13 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.content.ContextCompat;
+
 import com.pricepulse.R;
 import com.pricepulse.databinding.FragmentCheckoutBinding;
 import com.pricepulse.model.CartItem;
@@ -32,6 +39,8 @@ public class CheckoutFragment extends Fragment {
     private CartViewModel viewModel;
     private CheckoutSummaryAdapter checkoutAdapter;
     private String selectedPaymentMethod = "card";
+
+    private ActivityResultLauncher<String> locationPermissionLauncher;
 
     private static final double DELIVERY_FEE = 3.50;
 
@@ -70,6 +79,29 @@ public class CheckoutFragment extends Fragment {
         });
 
         updatePaymentMethodUi();
+
+        locationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (Boolean.TRUE.equals(isGranted)) {
+                        binding.locationDiscountStatusText.setText(
+                                getString(R.string.location_permission_granted)
+                        );
+                        binding.locationDiscountStatusText.setTextColor(
+                                requireContext().getColor(R.color.skroutz_blue)
+                        );
+                    } else {
+                        binding.locationDiscountStatusText.setText(
+                                getString(R.string.location_permission_denied)
+                        );
+                        binding.locationDiscountStatusText.setTextColor(
+                                requireContext().getColor(R.color.error_red)
+                        );
+                    }
+                }
+        );
+
+        binding.verifyLocationButton.setOnClickListener(v -> requestLocationPermission());
 
         binding.placeOrderButton.setOnClickListener(v -> {
             if (!validateDeliveryFields()) return;
@@ -125,6 +157,24 @@ public class CheckoutFragment extends Fragment {
         }
 
         return true;
+    }
+
+    private void requestLocationPermission() {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED) {
+
+            binding.locationDiscountStatusText.setText(
+                    getString(R.string.location_permission_granted)
+            );
+            binding.locationDiscountStatusText.setTextColor(
+                    requireContext().getColor(R.color.skroutz_blue)
+            );
+            return;
+        }
+
+        locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
     }
 
     private void authenticateThenCheckout() {
