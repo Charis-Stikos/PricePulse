@@ -21,16 +21,23 @@ import android.content.pm.PackageManager;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.core.content.ContextCompat;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+
+import com.pricepulse.util.LocationDiscountHelper;
 
 import com.pricepulse.R;
 import com.pricepulse.databinding.FragmentCheckoutBinding;
-import com.pricepulse.model.CartItem;
 import com.pricepulse.ui.adapters.CheckoutSummaryAdapter;
 import com.pricepulse.viewmodel.CartUiState;
 import com.pricepulse.viewmodel.CartViewModel;
 
-import java.util.List;
+
+
 import java.util.Locale;
 
 public class CheckoutFragment extends Fragment {
@@ -43,6 +50,12 @@ public class CheckoutFragment extends Fragment {
     private ActivityResultLauncher<String> locationPermissionLauncher;
 
     private static final double DELIVERY_FEE = 3.50;
+
+    private double currentDeliveryFee = DELIVERY_FEE;
+    private double currentDeliveryDiscountAmount = 0.0;
+    private double currentFinalTotalAmount = 0.0;
+    private boolean locationDiscountApplied = false;
+    private double currentSubtotal = 0.0;
 
     @Nullable
     @Override
@@ -84,13 +97,9 @@ public class CheckoutFragment extends Fragment {
                 new ActivityResultContracts.RequestPermission(),
                 isGranted -> {
                     if (Boolean.TRUE.equals(isGranted)) {
-                        binding.locationDiscountStatusText.setText(
-                                getString(R.string.location_permission_granted)
-                        );
-                        binding.locationDiscountStatusText.setTextColor(
-                                requireContext().getColor(R.color.skroutz_blue)
-                        );
+                        verifyDeliveryAddressLocation();
                     } else {
+                        resetLocationDiscount();
                         binding.locationDiscountStatusText.setText(
                                 getString(R.string.location_permission_denied)
                         );
@@ -101,7 +110,10 @@ public class CheckoutFragment extends Fragment {
                 }
         );
 
-        binding.verifyLocationButton.setOnClickListener(v -> requestLocationPermission());
+        binding.verifyLocationButton.setOnClickListener(v -> {
+            if (!validateDeliveryFields()) return;
+            requestLocationPermission();
+        });
 
         binding.placeOrderButton.setOnClickListener(v -> {
             if (!validateDeliveryFields()) return;
@@ -117,20 +129,8 @@ public class CheckoutFragment extends Fragment {
         });
 
         viewModel.getTotalAmount().observe(getViewLifecycleOwner(), total -> {
-            double subtotal = total != null ? total : 0.0;
-            double finalTotal = subtotal + DELIVERY_FEE;
-
-            binding.subtotalAmountText.setText(
-                    String.format(Locale.getDefault(), "%.2f €", subtotal)
-            );
-
-            binding.deliveryFeeText.setText(
-                    String.format(Locale.getDefault(), "%.2f €", DELIVERY_FEE)
-            );
-
-            binding.finalTotalAmountText.setText(
-                    String.format(Locale.getDefault(), "%.2f €", finalTotal)
-            );
+            currentSubtotal = total != null ? total : 0.0;
+            updateCheckoutTotals();
         });
 
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::renderState);
@@ -164,13 +164,7 @@ public class CheckoutFragment extends Fragment {
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED) {
-
-            binding.locationDiscountStatusText.setText(
-                    getString(R.string.location_permission_granted)
-            );
-            binding.locationDiscountStatusText.setTextColor(
-                    requireContext().getColor(R.color.skroutz_blue)
-            );
+            verifyDeliveryAddressLocation();
             return;
         }
 
@@ -201,7 +195,12 @@ public class CheckoutFragment extends Fragment {
                     public void onAuthenticationSucceeded(
                             @NonNull BiometricPrompt.AuthenticationResult result) {
                         if (binding == null) return;
-                        viewModel.checkout();
+                        viewModel.checkout(
+                                currentDeliveryFee,
+                                currentDeliveryDiscountAmount,
+                                currentFinalTotalAmount,
+                                locationDiscountApplied
+                        );
                     }
 
                     @Override
@@ -229,6 +228,179 @@ public class CheckoutFragment extends Fragment {
                 .build();
 
         prompt.authenticate(info);
+    }
+
+    @SuppressLint("MissingPermission")
+    private void verifyDeliveryAddressLocation() {
+        binding.verifyLocationButton.setEnabled(false);
+        binding.locationDiscountStatusText.setText(getString(R.string.location_discount_checking));
+        binding.locationDiscountStatusText.setTextColor(
+                requireContext().getColor(R.color.skroutz_blue)
+        );
+
+        LocationManager locationManager =
+                (LocationManager) requireContext().getSystemService(Context.LOCATION_SERVICE);
+
+        if (locationManager == null) {
+            showLocationDiscountError(getString(R.string.location_service_unavailable));
+            return;
+        }
+
+        Location lastKnownLocation = getBestLastKnownLocation(locationManager);
+
+        if (lastKnownLocation != null) {
+            checkDiscountWithLocation(lastKnownLocation);
+            return;
+        }
+
+        try {
+            locationManager.requestSingleUpdate(
+                    LocationManager.GPS_PROVIDER,
+                    new LocationListener() {
+                        @Override
+                        public void onLocationChanged(@NonNull Location location) {
+                            checkDiscountWithLocation(location);
+                        }
+
+                        @Override
+                        public void onProviderDisabled(@NonNull String provider) {
+                            showLocationDiscountError(getString(R.string.location_service_disabled));
+                        }
+                    },
+                    null
+            );
+        } catch (Exception ex) {
+            showLocationDiscountError(getString(R.string.location_service_unavailable));
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private Location getBestLastKnownLocation(LocationManager locationManager) {
+        Location gpsLocation = null;
+        Location networkLocation = null;
+
+        try {
+            gpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        } catch (Exception ignored) {
+        }
+
+        try {
+            networkLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        } catch (Exception ignored) {
+        }
+
+        if (gpsLocation == null) return networkLocation;
+        if (networkLocation == null) return gpsLocation;
+
+        return gpsLocation.getTime() >= networkLocation.getTime()
+                ? gpsLocation
+                : networkLocation;
+    }
+
+    private void checkDiscountWithLocation(Location userLocation) {
+        String shippingAddress = buildShippingAddress();
+
+        LocationDiscountHelper.checkDiscountEligibility(
+                requireContext(),
+                shippingAddress,
+                userLocation.getLatitude(),
+                userLocation.getLongitude(),
+                result -> {
+                    if (binding == null) return;
+
+                    binding.verifyLocationButton.setEnabled(true);
+
+                    if (!result.isSuccess()) {
+                        showLocationDiscountError(result.getMessage());
+                        return;
+                    }
+
+                    if (result.isEligible()) {
+                        applyLocationDiscount(result);
+                    } else {
+                        resetLocationDiscount();
+                        binding.locationDiscountStatusText.setText(result.getMessage());
+                        binding.locationDiscountStatusText.setTextColor(
+                                requireContext().getColor(R.color.error_red)
+                        );
+                    }
+                }
+        );
+    }
+
+    private String buildShippingAddress() {
+        String address = text(binding.addressInput);
+        String city = text(binding.cityInput);
+        String postalCode = text(binding.postalCodeInput);
+
+        return address + ", " + postalCode + ", " + city + ", Greece";
+    }
+
+    private void applyLocationDiscount(LocationDiscountHelper.Result result) {
+        double discountAmount = LocationDiscountHelper.calculateDiscountAmount(DELIVERY_FEE);
+        double discountedDeliveryFee = LocationDiscountHelper.calculateFinalDeliveryFee(DELIVERY_FEE);
+
+        currentDeliveryFee = discountedDeliveryFee;
+        currentDeliveryDiscountAmount = discountAmount;
+        locationDiscountApplied = true;
+
+        binding.deliveryDiscountRow.setVisibility(View.VISIBLE);
+        binding.deliveryDiscountText.setText(
+                String.format(Locale.getDefault(), "-%.2f €", discountAmount)
+        );
+
+        binding.locationDiscountStatusText.setText(
+                getString(
+                        R.string.location_discount_approved,
+                        result.getUserToAddressDistanceKm(),
+                        result.getAddressToShopDistanceKm()
+                )
+        );
+        binding.locationDiscountStatusText.setTextColor(
+                requireContext().getColor(R.color.success_green)
+        );
+
+        updateCheckoutTotals();
+    }
+
+    private void resetLocationDiscount() {
+        currentDeliveryFee = DELIVERY_FEE;
+        currentDeliveryDiscountAmount = 0.0;
+        locationDiscountApplied = false;
+
+        if (binding != null) {
+            binding.deliveryDiscountRow.setVisibility(View.GONE);
+            binding.deliveryDiscountText.setText("-0.00 €");
+            updateCheckoutTotals();
+        }
+    }
+
+    private void showLocationDiscountError(String message) {
+        if (binding == null) return;
+
+        binding.verifyLocationButton.setEnabled(true);
+        resetLocationDiscount();
+
+        binding.locationDiscountStatusText.setText(message);
+        binding.locationDiscountStatusText.setTextColor(
+                requireContext().getColor(R.color.error_red)
+        );
+    }
+
+    private void updateCheckoutTotals() {
+        currentFinalTotalAmount = currentSubtotal + currentDeliveryFee;
+
+        binding.subtotalAmountText.setText(
+                String.format(Locale.getDefault(), "%.2f €", currentSubtotal)
+        );
+
+        binding.deliveryFeeText.setText(
+                String.format(Locale.getDefault(), "%.2f €", currentDeliveryFee)
+        );
+
+        binding.finalTotalAmountText.setText(
+                String.format(Locale.getDefault(), "%.2f €", currentFinalTotalAmount)
+        );
     }
 
     private void updatePaymentMethodUi() {

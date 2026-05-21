@@ -198,4 +198,9 @@
 
     <string name="location_permission_granted">Location permission granted. Address verification will be available next.</string>
     <string name="location_permission_denied">Location permission denied. Delivery discount cannot be checked.</string>
+
+    <string name="location_discount_checking">Checking your delivery address location...</string>
+    <string name="location_service_unavailable">Location service is unavailable. Please try again.</string>
+    <string name="location_service_disabled">Location service is disabled. Please enable location services and try again.</string>
+    <string name="location_discount_approved">Location discount approved. Address verified within %.1f km from you and %.1f km from the shop.</string>
 </resources>

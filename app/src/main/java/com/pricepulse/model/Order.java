@@ -20,21 +20,6 @@ public class Order {
     }
 
     public Order(String id, String userId, List<CartItem> items,
-                 double totalAmount, String status, long timestamp) {
-        this.id = id;
-        this.userId = userId;
-        this.items = items;
-        this.totalAmount = totalAmount;
-        this.status = status;
-        this.timestamp = timestamp;
-
-        this.deliveryFee = 0.0;
-        this.deliveryDiscountAmount = 0.0;
-        this.finalTotalAmount = totalAmount;
-        this.locationDiscountApplied = false;
-    }
-
-    public Order(String id, String userId, List<CartItem> items,
                  double totalAmount, String status, long timestamp,
                  double deliveryFee, double deliveryDiscountAmount,
                  double finalTotalAmount, boolean locationDiscountApplied) {
@@ -44,6 +29,7 @@ public class Order {
         this.totalAmount = totalAmount;
         this.status = status;
         this.timestamp = timestamp;
+
         this.deliveryFee = deliveryFee;
         this.deliveryDiscountAmount = deliveryDiscountAmount;
         this.finalTotalAmount = finalTotalAmount;
