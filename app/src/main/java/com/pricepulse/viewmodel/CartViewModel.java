@@ -51,6 +51,21 @@ public class CartViewModel extends ViewModel {
     }
 
     public void checkout() {
+        Double totalValue = totalAmount.getValue();
+        double total = totalValue != null ? totalValue : 0.0;
+
+        checkout(
+                0.0,
+                0.0,
+                total,
+                false
+        );
+    }
+
+    public void checkout(double deliveryFee,
+                         double deliveryDiscountAmount,
+                         double finalTotalAmount,
+                         boolean locationDiscountApplied) {
         List<CartItem> items = cartManager.getItems().getValue();
         if (items == null || items.isEmpty()) return;
 
@@ -60,14 +75,20 @@ public class CartViewModel extends ViewModel {
             FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
             Double totalValue = totalAmount.getValue();
             double total = totalValue != null ? totalValue : 0.0;
+
             Order order = new Order(
                     UUID.randomUUID().toString(),
                     currentUser != null ? currentUser.getUid() : "anonymous",
                     new ArrayList<>(items),
                     total,
                     "Pending",
-                    System.currentTimeMillis()
+                    System.currentTimeMillis(),
+                    deliveryFee,
+                    deliveryDiscountAmount,
+                    finalTotalAmount,
+                    locationDiscountApplied
             );
+
             repository.saveOrder(order, success -> {
                 if (success) {
                     cartManager.clearCart();
