@@ -8,6 +8,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.biometric.BiometricManager;
+import androidx.biometric.BiometricPrompt;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
@@ -70,7 +73,7 @@ public class CheckoutFragment extends Fragment {
 
         binding.placeOrderButton.setOnClickListener(v -> {
             if (!validateDeliveryFields()) return;
-            viewModel.checkout();
+            authenticateThenCheckout();
         });
 
         viewModel.getCartItems().observe(getViewLifecycleOwner(), items -> {
@@ -122,6 +125,60 @@ public class CheckoutFragment extends Fragment {
         }
 
         return true;
+    }
+
+    private void authenticateThenCheckout() {
+        BiometricManager biometricManager = BiometricManager.from(requireContext());
+        int authenticators = BiometricManager.Authenticators.BIOMETRIC_WEAK;
+        int canAuth = biometricManager.canAuthenticate(authenticators);
+
+        if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
+            int messageRes;
+            if (canAuth == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED) {
+                messageRes = R.string.biometric_not_enrolled;
+            } else {
+                messageRes = R.string.biometric_not_available;
+            }
+            Toast.makeText(requireContext(), messageRes, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        BiometricPrompt prompt = new BiometricPrompt(
+                this,
+                ContextCompat.getMainExecutor(requireContext()),
+                new BiometricPrompt.AuthenticationCallback() {
+                    @Override
+                    public void onAuthenticationSucceeded(
+                            @NonNull BiometricPrompt.AuthenticationResult result) {
+                        if (binding == null) return;
+                        viewModel.checkout();
+                    }
+
+                    @Override
+                    public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                        if (binding == null) return;
+                        Toast.makeText(
+                                requireContext(),
+                                R.string.checkout_auth_failed,
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+
+                    @Override
+                    public void onAuthenticationFailed() {
+                        // user gets in-prompt feedback και μπορει να ξαναπροσπαθησει
+                    }
+                }
+        );
+
+        BiometricPrompt.PromptInfo info = new BiometricPrompt.PromptInfo.Builder()
+                .setTitle(getString(R.string.biometric_prompt_title))
+                .setSubtitle(getString(R.string.biometric_prompt_subtitle))
+                .setNegativeButtonText(getString(android.R.string.cancel))
+                .setAllowedAuthenticators(authenticators)
+                .build();
+
+        prompt.authenticate(info);
     }
 
     private void updatePaymentMethodUi() {

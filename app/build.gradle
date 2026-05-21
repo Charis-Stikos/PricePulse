@@ -73,6 +73,9 @@ dependencies {
     // shimmer για το loading placeholder
     implementation 'com.facebook.shimmer:shimmer:0.5.0'
 
+    // biometric (fingerprint / face) για επιβεβαιωση της παραγγελιας
+    implementation 'androidx.biometric:biometric:1.1.0'
+
     // χρειαζεται απο τη νεα εκδοση firebase για τα heartbeats
     implementation 'androidx.datastore:datastore-preferences:1.1.1'
 
