@@ -11,6 +11,11 @@ public class Order {
     private String status = "Pending";
     private long timestamp = System.currentTimeMillis();
 
+    private double deliveryFee = 0.0;
+    private double deliveryDiscountAmount = 0.0;
+    private double finalTotalAmount = 0.0;
+    private boolean locationDiscountApplied = false;
+
     public Order() {
     }
 
@@ -22,6 +27,27 @@ public class Order {
         this.totalAmount = totalAmount;
         this.status = status;
         this.timestamp = timestamp;
+
+        this.deliveryFee = 0.0;
+        this.deliveryDiscountAmount = 0.0;
+        this.finalTotalAmount = totalAmount;
+        this.locationDiscountApplied = false;
+    }
+
+    public Order(String id, String userId, List<CartItem> items,
+                 double totalAmount, String status, long timestamp,
+                 double deliveryFee, double deliveryDiscountAmount,
+                 double finalTotalAmount, boolean locationDiscountApplied) {
+        this.id = id;
+        this.userId = userId;
+        this.items = items;
+        this.totalAmount = totalAmount;
+        this.status = status;
+        this.timestamp = timestamp;
+        this.deliveryFee = deliveryFee;
+        this.deliveryDiscountAmount = deliveryDiscountAmount;
+        this.finalTotalAmount = finalTotalAmount;
+        this.locationDiscountApplied = locationDiscountApplied;
     }
 
     public String getId() { return id; }
@@ -41,4 +67,22 @@ public class Order {
 
     public long getTimestamp() { return timestamp; }
     public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
+
+    public double getDeliveryFee() { return deliveryFee; }
+    public void setDeliveryFee(double deliveryFee) { this.deliveryFee = deliveryFee; }
+
+    public double getDeliveryDiscountAmount() { return deliveryDiscountAmount; }
+    public void setDeliveryDiscountAmount(double deliveryDiscountAmount) {
+        this.deliveryDiscountAmount = deliveryDiscountAmount;
+    }
+
+    public double getFinalTotalAmount() { return finalTotalAmount; }
+    public void setFinalTotalAmount(double finalTotalAmount) {
+        this.finalTotalAmount = finalTotalAmount;
+    }
+
+    public boolean isLocationDiscountApplied() { return locationDiscountApplied; }
+    public void setLocationDiscountApplied(boolean locationDiscountApplied) {
+        this.locationDiscountApplied = locationDiscountApplied;
+    }
 }
