@@ -188,4 +188,11 @@
     <string name="biometric_not_available">Biometric authentication is not available on this device</string>
     <string name="biometric_not_enrolled">No fingerprint or face unlock is set up on this device. Please enroll one to place an order.</string>
     <string name="checkout_auth_failed">Order cancelled — authentication required</string>
+
+    <string name="location_discount">Location Discount</string>
+    <string name="nearby_delivery_discount">Nearby Delivery Discount</string>
+    <string name="nearby_delivery_discount_description">Verify your delivery address with your current location. If your address is near you and within 30 km of the shop, you get 30% off delivery fees.</string>
+    <string name="location_discount_not_checked">Location discount has not been checked yet.</string>
+    <string name="verify_delivery_address">Verify Delivery Address</string>
+    <string name="location_discount_applied">Location Discount</string>
 </resources>
