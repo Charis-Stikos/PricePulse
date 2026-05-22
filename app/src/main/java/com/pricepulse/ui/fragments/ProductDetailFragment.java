@@ -22,12 +22,16 @@ import com.pricepulse.util.ImageLoader;
 import com.google.firebase.auth.FirebaseUser;
 import com.pricepulse.R;
 import com.pricepulse.cart.CartManager;
+import com.pricepulse.databinding.DialogReviewSubmitBinding;
 import com.pricepulse.databinding.FragmentProductDetailBinding;
 import com.pricepulse.databinding.ItemReviewBinding;
 import com.pricepulse.model.Product;
 import com.pricepulse.model.Review;
+import com.pricepulse.model.Shop;
 import com.pricepulse.viewmodel.ProductDetailUiState;
 import com.pricepulse.viewmodel.ProductDetailViewModel;
+
+import android.widget.Toast;
 
 import java.util.Locale;
 
@@ -64,7 +68,81 @@ public class ProductDetailFragment extends Fragment {
             }
         });
 
+        binding.writeReviewButton.setOnClickListener(v -> {
+            FirebaseUser u = viewModel.getAuthManager().getCurrentUserValue();
+            if (u == null || u.isAnonymous()) {
+                Toast.makeText(requireContext(), R.string.review_must_sign_in, Toast.LENGTH_SHORT).show();
+                NavHostFragment.findNavController(this).navigate(R.id.action_detail_to_profile);
+                return;
+            }
+            showReviewDialog();
+        });
+
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
+        viewModel.getCurrentShop().observe(getViewLifecycleOwner(), this::bindShopCard);
+        viewModel.getReviewSubmitResult().observe(getViewLifecycleOwner(), success -> {
+            if (binding == null) return;
+            Toast.makeText(requireContext(),
+                    Boolean.TRUE.equals(success)
+                            ? R.string.review_submitted
+                            : R.string.review_submit_failed,
+                    Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void bindShopCard(@Nullable Shop shop) {
+        if (binding == null) return;
+        if (shop == null) {
+            binding.detailShopCard.setVisibility(View.GONE);
+            return;
+        }
+        binding.detailShopCard.setVisibility(View.VISIBLE);
+        String name = shop.getName() != null ? shop.getName() : "";
+        binding.detailShopName.setText(name);
+        binding.detailShopInitial.setText(
+                name.isEmpty() ? "S" : name.substring(0, 1).toUpperCase());
+        binding.detailShopRating.setText(getString(
+                R.string.reviews_average_format, shop.getRating()));
+        binding.detailShopActiveBadge.setVisibility(shop.isActive() ? View.VISIBLE : View.GONE);
+    }
+
+    private void showReviewDialog() {
+        DialogReviewSubmitBinding b = DialogReviewSubmitBinding.inflate(
+                LayoutInflater.from(requireContext()));
+
+        final int[] selected = {0};
+        ImageView[] stars = {b.reviewStar1, b.reviewStar2, b.reviewStar3, b.reviewStar4, b.reviewStar5};
+        int gold = ContextCompat.getColor(requireContext(), R.color.star_gold);
+        int gray = ContextCompat.getColor(requireContext(), R.color.light_gray);
+        Runnable paint = () -> {
+            for (int i = 0; i < stars.length; i++) {
+                stars[i].setColorFilter(i < selected[0] ? gold : gray);
+            }
+        };
+        for (int i = 0; i < stars.length; i++) {
+            final int idx = i + 1;
+            stars[i].setOnClickListener(v -> {
+                selected[0] = idx;
+                paint.run();
+            });
+        }
+        paint.run();
+
+        new android.app.AlertDialog.Builder(requireContext())
+                .setTitle(R.string.write_review)
+                .setView(b.getRoot())
+                .setPositiveButton(R.string.submit_review, (d, w) -> {
+                    if (selected[0] == 0) {
+                        Toast.makeText(requireContext(), R.string.review_rating_required,
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    String comment = b.reviewCommentInput.getText() != null
+                            ? b.reviewCommentInput.getText().toString().trim() : "";
+                    viewModel.submitReview(selected[0], comment);
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     private void render(ProductDetailUiState state) {

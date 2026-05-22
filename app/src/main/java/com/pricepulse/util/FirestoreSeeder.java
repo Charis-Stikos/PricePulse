@@ -7,6 +7,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.WriteBatch;
 import com.pricepulse.model.Product;
 import com.pricepulse.model.Review;
+import com.pricepulse.model.Shop;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,8 +23,11 @@ public class FirestoreSeeder {
 
     private static final String TAG = "FirestoreSeeder";
 
+    private static final String DEFAULT_SHOP_ID = "default-shop";
+
     private final FirebaseFirestore firestore = FirebaseFirestore.getInstance();
     private final CollectionReference productsCollection = firestore.collection("products");
+    private final CollectionReference shopsCollection = firestore.collection("shops");
     private final Random random = new Random();
 
     public void seedData() {
@@ -48,19 +52,46 @@ public class FirestoreSeeder {
 
     private void writeProducts(SeedCallback callback) {
         List<Product> products = buildProducts();
+        Shop defaultShop = buildDefaultShop(products.size());
+
         WriteBatch batch = firestore.batch();
+        batch.set(shopsCollection.document(defaultShop.getId()), defaultShop);
         for (Product product : products) {
+            product.setShopId(defaultShop.getId());
+            product.setShopName(defaultShop.getName());
+            product.setShopActive(defaultShop.isActive());
             batch.set(productsCollection.document(product.getId()), product);
         }
         batch.commit()
                 .addOnSuccessListener(v -> {
-                    Log.i(TAG, "Seeded " + products.size() + " products to Firestore.");
+                    Log.i(TAG, "Seeded " + products.size() + " products + 1 shop to Firestore.");
                     if (callback != null) callback.onComplete(true);
                 })
                 .addOnFailureListener(error -> {
-                    Log.e(TAG, "Failed to seed products", error);
+                    Log.e(TAG, "Failed to seed products/shop", error);
                     if (callback != null) callback.onComplete(false);
                 });
+    }
+
+    private Shop buildDefaultShop(int productCount) {
+        // demo shop στη Θεσσαλονικη — οι ιδιες συντεταγμενες με το LocationDiscountHelper
+        Shop shop = new Shop();
+        shop.setId(DEFAULT_SHOP_ID);
+        shop.setOwnerId("");
+        shop.setName("PricePulse Store");
+        shop.setDescription("Demo storefront. Electronics, fashion, home and more.");
+        shop.setMainCategory("Electronics");
+        shop.setBusinessEmail("contact@pricepulse.app");
+        shop.setBusinessPhone("+30 210 000 0000");
+        shop.setAddress("12 Market Street, Thessaloniki");
+        shop.setOpeningHours("Monday - Friday, 09:00 - 18:00");
+        shop.setDeliveryOptions("Courier delivery and in-store pickup available");
+        shop.setRating(4.8);
+        shop.setProductCount(productCount);
+        shop.setActive(true);
+        shop.setLatitude(40.6401);
+        shop.setLongitude(22.9444);
+        return shop;
     }
 
     private List<Product> buildProducts() {

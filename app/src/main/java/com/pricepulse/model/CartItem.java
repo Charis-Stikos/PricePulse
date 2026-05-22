@@ -6,6 +6,7 @@ public class CartItem {
     private double productPrice = 0.0;
     private String productImageUrl = "";
     private int quantity = 1;
+    private String shopId = "";
 
     public CartItem() {
     }
@@ -17,6 +18,12 @@ public class CartItem {
         this.productPrice = productPrice;
         this.productImageUrl = productImageUrl;
         this.quantity = quantity;
+    }
+
+    public CartItem(String productId, String productTitle, double productPrice,
+                    String productImageUrl, int quantity, String shopId) {
+        this(productId, productTitle, productPrice, productImageUrl, quantity);
+        this.shopId = shopId;
     }
 
     public String getProductId() { return productId; }
@@ -34,7 +41,10 @@ public class CartItem {
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
 
+    public String getShopId() { return shopId; }
+    public void setShopId(String shopId) { this.shopId = shopId; }
+
     public CartItem withQuantity(int newQuantity) {
-        return new CartItem(productId, productTitle, productPrice, productImageUrl, newQuantity);
+        return new CartItem(productId, productTitle, productPrice, productImageUrl, newQuantity, shopId);
     }
 }

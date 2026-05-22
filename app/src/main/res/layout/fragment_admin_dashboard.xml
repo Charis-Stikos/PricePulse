@@ -32,33 +32,7 @@
         app:tabIndicatorColor="@color/skroutz_orange"
         app:tabSelectedTextColor="@color/skroutz_orange"
         app:tabTextColor="@color/skroutz_text_secondary"
-        app:tabMode="scrollable">
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/admin_overview" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/admin_shop_details" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/admin_orders" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/admin_add_product" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/admin_privilages" />
-    </com.google.android.material.tabs.TabLayout>
+        app:tabMode="scrollable"/>
 
     <FrameLayout
         android:id="@+id/adminContent"

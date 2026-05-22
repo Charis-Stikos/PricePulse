@@ -13,6 +13,9 @@ public class Product {
     private double rating = 0.0;
     private int reviewCount = 0;
     private int shopCount = 0;
+    private String shopId = "";
+    private String shopName = "";
+    private boolean shopActive = true;
     private List<Review> reviews = new ArrayList<>();
 
     public Product() {
@@ -59,6 +62,15 @@ public class Product {
 
     public int getShopCount() { return shopCount; }
     public void setShopCount(int shopCount) { this.shopCount = shopCount; }
+
+    public String getShopId() { return shopId; }
+    public void setShopId(String shopId) { this.shopId = shopId; }
+
+    public String getShopName() { return shopName; }
+    public void setShopName(String shopName) { this.shopName = shopName; }
+
+    public boolean isShopActive() { return shopActive; }
+    public void setShopActive(boolean shopActive) { this.shopActive = shopActive; }
 
     public List<Review> getReviews() { return reviews; }
     public void setReviews(List<Review> reviews) { this.reviews = reviews; }

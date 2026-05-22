@@ -1,6 +1,7 @@
 package com.pricepulse.admin;
 
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -28,19 +29,44 @@ public final class AdminSession {
 
     private final FirebaseRepository repository = new FirebaseRepository();
     private final MutableLiveData<Boolean> isAdmin = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> isShopOwner = new MutableLiveData<>(false);
+    private final MutableLiveData<String> ownedShopId = new MutableLiveData<>("");
+    private final MediatorLiveData<Boolean> canAccessDashboard = new MediatorLiveData<>();
 
     private ListenerRegistration profileListener;
     private String listenedUid;
     private boolean seededForUid;
 
     private AdminSession() {
+        canAccessDashboard.setValue(false);
+        canAccessDashboard.addSource(isAdmin, v -> recomputeAccess());
+        canAccessDashboard.addSource(isShopOwner, v -> recomputeAccess());
+
         FirebaseAuth auth = FirebaseAuth.getInstance();
         attach(auth.getCurrentUser());
         auth.addAuthStateListener(a -> attach(a.getCurrentUser()));
     }
 
+    private void recomputeAccess() {
+        canAccessDashboard.setValue(
+                Boolean.TRUE.equals(isAdmin.getValue())
+                        || Boolean.TRUE.equals(isShopOwner.getValue()));
+    }
+
     public LiveData<Boolean> isAdmin() {
         return isAdmin;
+    }
+
+    public LiveData<Boolean> isShopOwner() {
+        return isShopOwner;
+    }
+
+    public LiveData<String> ownedShopId() {
+        return ownedShopId;
+    }
+
+    public LiveData<Boolean> canAccessDashboard() {
+        return canAccessDashboard;
     }
 
     public void refresh() {
@@ -56,6 +82,8 @@ public final class AdminSession {
 
         if (user == null || user.isAnonymous() || user.getEmail() == null) {
             isAdmin.postValue(false);
+            isShopOwner.postValue(false);
+            ownedShopId.postValue("");
             return;
         }
 
@@ -74,10 +102,14 @@ public final class AdminSession {
                     repository.updateUserProfile(created, ok -> { /* το snapshot θα ξανατρεξει μονο του */ });
                 }
                 isAdmin.postValue(false);
+                isShopOwner.postValue(false);
+                ownedShopId.postValue("");
                 return;
             }
             seededForUid = true;
             isAdmin.postValue(profile.isAdmin());
+            isShopOwner.postValue(profile.isShopOwner());
+            ownedShopId.postValue(profile.getOwnedShopId() != null ? profile.getOwnedShopId() : "");
         });
     }
 

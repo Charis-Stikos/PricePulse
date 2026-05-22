@@ -156,6 +156,19 @@
                 android:background="@drawable/bg_chip_unselected" />
 
             <TextView
+                android:id="@+id/filterInTransit"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:paddingHorizontal="18dp"
+                android:text="@string/status_in_transit"
+                android:textStyle="bold"
+                android:textSize="13sp"
+                android:textColor="@color/skroutz_text_primary"
+                android:background="@drawable/bg_chip_unselected" />
+
+            <TextView
                 android:id="@+id/filterCompleted"
                 android:layout_width="wrap_content"
                 android:layout_height="38dp"

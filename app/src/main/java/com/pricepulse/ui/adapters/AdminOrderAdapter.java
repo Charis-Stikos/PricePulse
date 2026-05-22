@@ -91,6 +91,7 @@ public class AdminOrderAdapter extends ListAdapter<Order, AdminOrderAdapter.VH> 
                     : b.getRoot().getContext().getString(R.string.view_order));
 
             b.adminOrderDetailsItems.setText(buildOrderDetails(order));
+            b.adminOrderShipping.setText(buildShippingDetails(b, order));
 
             b.adminOrderViewBtn.setOnClickListener(v -> {
                 if (order.getId() != null && order.getId().equals(expandedOrderId)) {
@@ -135,6 +136,40 @@ public class AdminOrderAdapter extends ListAdapter<Order, AdminOrderAdapter.VH> 
             b.adminOrderStatusChip.getBackground().mutate()
                     .setColorFilter(color, PorterDuff.Mode.SRC_IN);
         }
+
+        private String buildShippingDetails(ItemAdminOrderBinding b, Order order) {
+            String name = nullSafe(order.getShippingFullName());
+            String phone = nullSafe(order.getShippingPhone());
+            String address = nullSafe(order.getShippingAddress());
+            String city = nullSafe(order.getShippingCity());
+            String postal = nullSafe(order.getShippingPostalCode());
+            String payment = nullSafe(order.getPaymentMethod());
+
+            boolean anything = !(name.isEmpty() && phone.isEmpty() && address.isEmpty()
+                    && city.isEmpty() && postal.isEmpty() && payment.isEmpty());
+            if (!anything) {
+                return b.getRoot().getContext().getString(R.string.shipping_no_info);
+            }
+
+            StringBuilder out = new StringBuilder();
+            if (!name.isEmpty()) out.append(name).append("\n");
+            if (!phone.isEmpty()) out.append(phone).append("\n");
+            if (!address.isEmpty()) out.append(address);
+            if (!postal.isEmpty() || !city.isEmpty()) {
+                if (!address.isEmpty()) out.append("\n");
+                if (!postal.isEmpty()) out.append(postal);
+                if (!postal.isEmpty() && !city.isEmpty()) out.append(" ");
+                if (!city.isEmpty()) out.append(city);
+            }
+            if (!payment.isEmpty()) {
+                out.append("\n\n").append(b.getRoot().getContext()
+                        .getString(R.string.payment_method_label))
+                        .append(": ").append(payment);
+            }
+            return out.toString();
+        }
+
+        private String nullSafe(String s) { return s == null ? "" : s.trim(); }
 
         private String buildOrderDetails(Order order) {
             StringBuilder details = new StringBuilder();

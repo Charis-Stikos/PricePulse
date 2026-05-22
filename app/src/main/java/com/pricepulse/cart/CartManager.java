@@ -48,7 +48,8 @@ public final class CartManager {
                     product.getTitle(),
                     product.getPrice(),
                     product.getImageUrl(),
-                    1
+                    1,
+                    product.getShopId()
             ));
         }
         items.setValue(current);

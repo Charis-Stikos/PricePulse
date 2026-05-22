@@ -107,14 +107,129 @@
                     android:textColor="@color/skroutz_text_secondary"
                     android:lineSpacingExtra="4sp"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/detailShopCard"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="32dp"
-                    android:text="@string/customer_reviews"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/skroutz_text_primary"/>
+                    android:layout_marginTop="24dp"
+                    app:cardCornerRadius="14dp"
+                    app:cardBackgroundColor="@color/skroutz_gray"
+                    app:cardElevation="0dp"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="14dp">
+
+                        <FrameLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_circle_orange">
+
+                            <TextView
+                                android:id="@+id/detailShopInitial"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:textColor="@color/white"
+                                android:textStyle="bold"
+                                android:textSize="18sp"/>
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="12dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/sold_by_label"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/skroutz_text_secondary"
+                                android:letterSpacing="0.08"/>
+
+                            <TextView
+                                android:id="@+id/detailShopName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textStyle="bold"
+                                android:textSize="15sp"
+                                android:textColor="@color/skroutz_text_primary"/>
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginTop="2dp">
+
+                                <ImageView
+                                    android:layout_width="12dp"
+                                    android:layout_height="12dp"
+                                    android:src="@drawable/ic_star"
+                                    app:tint="@color/star_gold"/>
+
+                                <TextView
+                                    android:id="@+id/detailShopRating"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="4dp"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/skroutz_text_secondary"/>
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/detailShopActiveBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="3dp"
+                            android:background="@drawable/bg_default_badge"
+                            android:text="@string/shop_status_active"
+                            android:textStyle="bold"
+                            android:textSize="11sp"
+                            android:textColor="@color/skroutz_orange"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="32dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="@string/customer_reviews"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/skroutz_text_primary"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/writeReviewButton"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="@string/write_review"
+                        android:textAllCaps="false"
+                        android:textStyle="bold"
+                        android:textSize="13sp"
+                        android:textColor="@color/skroutz_orange"
+                        app:strokeColor="@color/skroutz_orange"
+                        app:cornerRadius="10dp"/>
+                </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/reviewsContainer"

@@ -9,6 +9,8 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.pricepulse.auth.AuthManager;
 import com.pricepulse.model.Product;
+import com.pricepulse.model.Review;
+import com.pricepulse.model.Shop;
 import com.pricepulse.repository.FirebaseRepository;
 
 import java.util.ArrayList;
@@ -20,20 +22,60 @@ public class ProductDetailViewModel extends ViewModel {
     private final AuthManager authManager = new AuthManager();
 
     private final MutableLiveData<ProductDetailUiState> uiState = new MutableLiveData<>(new ProductDetailUiState.Loading());
+    private final MutableLiveData<Shop> currentShop = new MutableLiveData<>();
+    private final SingleLiveEvent<Boolean> reviewSubmitResult = new SingleLiveEvent<>();
 
     private String currentProductId;
+    private String listenedShopId;
     private List<String> likedProductIds = new ArrayList<>();
     private Product currentProduct;
 
     private ListenerRegistration productRegistration;
     private ListenerRegistration userRegistration;
+    private ListenerRegistration shopRegistration;
 
     public LiveData<ProductDetailUiState> getUiState() {
         return uiState;
     }
 
+    public LiveData<Shop> getCurrentShop() {
+        return currentShop;
+    }
+
+    public LiveData<Boolean> getReviewSubmitResult() {
+        return reviewSubmitResult;
+    }
+
     public AuthManager getAuthManager() {
         return authManager;
+    }
+
+    private void attachShopIfNeeded(String shopId) {
+        if (shopId == null || shopId.isEmpty()) {
+            if (shopRegistration != null) { shopRegistration.remove(); shopRegistration = null; }
+            listenedShopId = null;
+            currentShop.setValue(null);
+            return;
+        }
+        if (shopId.equals(listenedShopId) && shopRegistration != null) return;
+        if (shopRegistration != null) { shopRegistration.remove(); shopRegistration = null; }
+        listenedShopId = shopId;
+        shopRegistration = repository.listenToShop(shopId, currentShop::setValue);
+    }
+
+    public void submitReview(int rating, String comment) {
+        FirebaseUser user = authManager.getCurrentUserValue();
+        if (user == null || user.isAnonymous() || currentProductId == null) {
+            reviewSubmitResult.setValue(false);
+            return;
+        }
+        String displayName = user.getDisplayName();
+        if (displayName == null || displayName.isEmpty()) {
+            displayName = user.getEmail() != null ? user.getEmail() : "User";
+        }
+        Review review = new Review(user.getUid(), displayName, comment, rating,
+                System.currentTimeMillis());
+        repository.submitReview(currentProductId, review, reviewSubmitResult::setValue);
     }
 
     public void loadProduct(@Nullable String productId) {
@@ -53,6 +95,7 @@ public class ProductDetailViewModel extends ViewModel {
             }
             currentProduct = product;
             emitState();
+            attachShopIfNeeded(product.getShopId());
         });
 
         FirebaseUser user = authManager.getCurrentUserValue();
@@ -109,6 +152,11 @@ public class ProductDetailViewModel extends ViewModel {
             userRegistration.remove();
             userRegistration = null;
         }
+        if (shopRegistration != null) {
+            shopRegistration.remove();
+            shopRegistration = null;
+        }
+        listenedShopId = null;
     }
 
     @Override

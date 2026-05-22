@@ -9,6 +9,8 @@ public class User {
     private String displayName = "";
     private List<String> likedProductIds = new ArrayList<>();
     private boolean admin = false;
+    private boolean shopOwner = false;
+    private String ownedShopId = "";
 
     public User() {
     }
@@ -22,6 +24,12 @@ public class User {
 
     public boolean isAdmin() { return admin; }
     public void setAdmin(boolean admin) { this.admin = admin; }
+
+    public boolean isShopOwner() { return shopOwner; }
+    public void setShopOwner(boolean shopOwner) { this.shopOwner = shopOwner; }
+
+    public String getOwnedShopId() { return ownedShopId; }
+    public void setOwnedShopId(String ownedShopId) { this.ownedShopId = ownedShopId; }
 
     public String getUid() { return uid; }
     public void setUid(String uid) { this.uid = uid; }

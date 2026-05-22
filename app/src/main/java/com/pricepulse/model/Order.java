@@ -16,6 +16,15 @@ public class Order {
     private double finalTotalAmount = 0.0;
     private boolean locationDiscountApplied = false;
 
+    private String shopId = "";
+
+    private String shippingFullName = "";
+    private String shippingPhone = "";
+    private String shippingAddress = "";
+    private String shippingCity = "";
+    private String shippingPostalCode = "";
+    private String paymentMethod = "";
+
     public Order() {
     }
 
@@ -71,4 +80,25 @@ public class Order {
     public void setLocationDiscountApplied(boolean locationDiscountApplied) {
         this.locationDiscountApplied = locationDiscountApplied;
     }
+
+    public String getShopId() { return shopId; }
+    public void setShopId(String shopId) { this.shopId = shopId; }
+
+    public String getShippingFullName() { return shippingFullName; }
+    public void setShippingFullName(String shippingFullName) { this.shippingFullName = shippingFullName; }
+
+    public String getShippingPhone() { return shippingPhone; }
+    public void setShippingPhone(String shippingPhone) { this.shippingPhone = shippingPhone; }
+
+    public String getShippingAddress() { return shippingAddress; }
+    public void setShippingAddress(String shippingAddress) { this.shippingAddress = shippingAddress; }
+
+    public String getShippingCity() { return shippingCity; }
+    public void setShippingCity(String shippingCity) { this.shippingCity = shippingCity; }
+
+    public String getShippingPostalCode() { return shippingPostalCode; }
+    public void setShippingPostalCode(String shippingPostalCode) { this.shippingPostalCode = shippingPostalCode; }
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 }

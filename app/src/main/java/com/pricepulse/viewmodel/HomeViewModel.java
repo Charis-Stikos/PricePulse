@@ -5,7 +5,11 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.firestore.ListenerRegistration;
+import com.pricepulse.model.Product;
 import com.pricepulse.repository.FirebaseRepository;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class HomeViewModel extends ViewModel {
 
@@ -42,7 +46,16 @@ public class HomeViewModel extends ViewModel {
         String category = selectedCategory.getValue();
         if (category == null) category = "All";
         registration = repository.listenToProductsByCategory(category, 20, products ->
-                uiState.setValue(new HomeUiState.Success(products)));
+                uiState.setValue(new HomeUiState.Success(filterActive(products))));
+    }
+
+    private static List<Product> filterActive(List<Product> products) {
+        if (products == null) return new ArrayList<>();
+        List<Product> out = new ArrayList<>(products.size());
+        for (Product p : products) {
+            if (p.isShopActive()) out.add(p);
+        }
+        return out;
     }
 
     @Override

@@ -347,11 +347,11 @@ public class ProfileFragment extends Fragment {
         b.rowAdmin.getRoot().setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigate(R.id.action_profile_to_admin));
 
-        com.pricepulse.admin.AdminSession.getInstance().isAdmin()
-                .observe(getViewLifecycleOwner(), admin -> {
-                    boolean isAdmin = Boolean.TRUE.equals(admin);
-                    b.rowAdminDivider.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
-                    b.rowAdmin.getRoot().setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+        com.pricepulse.admin.AdminSession.getInstance().canAccessDashboard()
+                .observe(getViewLifecycleOwner(), canAccess -> {
+                    boolean show = Boolean.TRUE.equals(canAccess);
+                    b.rowAdminDivider.setVisibility(show ? View.VISIBLE : View.GONE);
+                    b.rowAdmin.getRoot().setVisibility(show ? View.VISIBLE : View.GONE);
                 });
 
         b.signOutButton.setOnClickListener(v -> viewModel.getAuthManager().signOut());

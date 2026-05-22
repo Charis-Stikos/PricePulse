@@ -89,6 +89,7 @@
     <string name="admin_orders">Manage Orders</string>
     <string name="admin_add_product">Add Product</string>
     <string name="status_pending">Pending</string>
+    <string name="status_in_transit">In Transit</string>
     <string name="status_completed">Completed</string>
     <string name="status_label">Status</string>
     <string name="update_status">Update Status</string>
@@ -233,4 +234,47 @@
     <string name="change_address">Change</string>
     <string name="picker_no_saved_addresses">You have no saved addresses yet. Add some from your account.</string>
     <string name="picker_title">Choose an address</string>
+
+    <string name="add_shop_owner">Add Shop Owner</string>
+    <string name="admin_current_shop_owners">Current shop owners</string>
+    <string name="no_shop_owners">No shop owners yet</string>
+    <string name="shop_owner_promoted">User promoted to shop owner</string>
+    <string name="shop_owner_revoked">Shop owner privileges revoked</string>
+    <string name="confirm_revoke_shop_owner">Revoke shop owner from %1$s?</string>
+
+    <string name="platform_overview_title">Platform Overview</string>
+    <string name="platform_overview_subtitle">Live totals across every shop on PricePulse.</string>
+    <string name="platform_totals_label">Totals</string>
+    <string name="platform_shops_label">Shops</string>
+
+    <string name="sold_by_format">Sold by %1$s</string>
+
+    <string name="admin_shops">Shops</string>
+    <string name="admin_shops_list_title">All shops</string>
+    <string name="add_shop">Add Shop</string>
+    <string name="edit_shop">Edit Shop</string>
+    <string name="no_shops_yet">No shops yet</string>
+    <string name="shop_saved">Shop saved</string>
+    <string name="shop_save_failed">Could not save shop</string>
+    <string name="shop_owner_email_optional">Owner email (optional)</string>
+    <string name="shop_active_label">Active</string>
+    <string name="products_in_shop_format">%1$d products</string>
+    <string name="owner_label_format">Owner: %1$s</string>
+    <string name="no_owner_assigned">No owner assigned</string>
+    <string name="assign_to_shop_hint">Assign to shop</string>
+    <string name="shop_required">Please select a shop</string>
+    <string name="shipping_details_label">Shipping details</string>
+    <string name="payment_method_label">Payment method</string>
+    <string name="shipping_no_info">No shipping info recorded for this order.</string>
+
+    <string name="sold_by_label">SOLD BY</string>
+    <string name="write_review">Write a review</string>
+    <string name="rating_label">Your rating</string>
+    <string name="review_comment_hint">Share your thoughts about this product</string>
+    <string name="submit_review">Submit review</string>
+    <string name="review_submitted">Thanks for your review</string>
+    <string name="review_submit_failed">Could not submit your review. Please try again.</string>
+    <string name="review_rating_required">Please pick a rating</string>
+    <string name="review_must_sign_in">Sign in to write a review</string>
+    <string name="reviews_average_format">%.1f out of 5</string>
 </resources>

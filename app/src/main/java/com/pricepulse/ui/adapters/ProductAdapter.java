@@ -88,7 +88,13 @@ public class ProductAdapter extends ListAdapter<ProductListItem, RecyclerView.Vi
             b.productTitle.setText(p.getTitle());
             b.reviewCount.setText("(" + p.getReviewCount() + ")");
             b.productPrice.setText(String.format(Locale.getDefault(), "%.2f €", p.getPrice()));
-            b.shopCount.setText(b.getRoot().getContext().getString(R.string.in_stores_format, p.getShopCount()));
+            String shopName = p.getShopName();
+            if (shopName != null && !shopName.isEmpty()) {
+                b.shopCount.setText(b.getRoot().getContext().getString(R.string.sold_by_format, shopName));
+                b.shopCount.setVisibility(android.view.View.VISIBLE);
+            } else {
+                b.shopCount.setVisibility(android.view.View.GONE);
+            }
             int gold = ContextCompat.getColor(b.getRoot().getContext(), R.color.star_gold);
             int gray = ContextCompat.getColor(b.getRoot().getContext(), R.color.skroutz_gray);
             int filled = (int) p.getRating();

@@ -27,14 +27,19 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.pricepulse.R;
+import com.pricepulse.admin.AdminSession;
 import com.pricepulse.model.Order;
 import com.pricepulse.model.User;
 import com.pricepulse.databinding.AdminAddProductBinding;
 import com.pricepulse.databinding.AdminManageAdminsBinding;
 import com.pricepulse.databinding.AdminOrdersBinding;
 import com.pricepulse.databinding.AdminOverviewBinding;
+import com.pricepulse.databinding.AdminPlatformOverviewBinding;
 import com.pricepulse.databinding.AdminShopDetailsBinding;
+import com.pricepulse.databinding.AdminShopsBinding;
 import com.pricepulse.databinding.FragmentAdminDashboardBinding;
+import com.pricepulse.model.Shop;
+import com.pricepulse.ui.adapters.ShopAdapter;
 import com.pricepulse.model.Product;
 import com.pricepulse.ui.adapters.AdminOrderAdapter;
 import com.pricepulse.ui.adapters.AdminUserAdapter;
@@ -46,15 +51,21 @@ import java.util.List;
 
 public class AdminDashboardFragment extends Fragment {
 
+    private enum TabKey { OVERVIEW, SHOP_DETAILS, ORDERS, ADD_PRODUCT, MANAGE_ADMINS, SHOPS }
+
     private FragmentAdminDashboardBinding binding;
     private AdminViewModel viewModel;
     private ViewBinding currentSubBinding;
     private AdminOrderAdapter orderAdapter;
     private AdminUserAdapter adminUserAdapter;
+    private AdminUserAdapter shopOwnerAdapter;
+    private ShopAdapter shopAdapter;
+    private Shop shopBeingEdited;
     private Uri pickedImageUri;
     private ActivityResultLauncher<String> imagePicker;
     private List<Order> cachedOrders = new ArrayList<>();
     private List<User> cachedAdmins = new ArrayList<>();
+    private List<User> cachedShopOwners = new ArrayList<>();
     private String selectedOrderFilter = "All";
 
     private static final List<String> CATEGORIES = Arrays.asList(
@@ -96,9 +107,23 @@ public class AdminDashboardFragment extends Fragment {
         });
 
         binding.adminTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override public void onTabSelected(TabLayout.Tab tab) { renderTab(tab.getPosition()); }
+            @Override public void onTabSelected(TabLayout.Tab tab) {
+                if (tab.getTag() instanceof TabKey) renderTab((TabKey) tab.getTag());
+            }
             @Override public void onTabUnselected(TabLayout.Tab tab) {}
             @Override public void onTabReselected(TabLayout.Tab tab) {}
+        });
+
+        AdminSession session = AdminSession.getInstance();
+        boolean isAdmin = Boolean.TRUE.equals(session.isAdmin().getValue());
+        boolean isShopOwner = Boolean.TRUE.equals(session.isShopOwner().getValue());
+        buildTabsForRole(isAdmin, isShopOwner);
+
+        // αν χάσει το δικαιωμα ενω βρισκεται μεσα, popback
+        session.canAccessDashboard().observe(getViewLifecycleOwner(), canAccess -> {
+            if (!Boolean.TRUE.equals(canAccess)) {
+                NavHostFragment.findNavController(this).popBackStack();
+            }
         });
 
         viewModel.getEvents().observe(getViewLifecycleOwner(), event -> {
@@ -141,6 +166,46 @@ public class AdminDashboardFragment extends Fragment {
                 case ADMIN_ACTION_FAILED:
                     Toast.makeText(requireContext(), R.string.profile_update_failed, Toast.LENGTH_SHORT).show();
                     break;
+                case SHOP_OWNER_PROMOTED:
+                    Toast.makeText(requireContext(), R.string.shop_owner_promoted, Toast.LENGTH_SHORT).show();
+                    if (currentSubBinding instanceof AdminManageAdminsBinding) {
+                        ((AdminManageAdminsBinding) currentSubBinding).shopOwnerEmailInput.setText("");
+                    }
+                    break;
+                case SHOP_OWNER_REVOKED:
+                    Toast.makeText(requireContext(), R.string.shop_owner_revoked, Toast.LENGTH_SHORT).show();
+                    break;
+                case SHOP_OWNER_ALREADY_OWNER:
+                    Toast.makeText(requireContext(), R.string.admin_already_admin, Toast.LENGTH_SHORT).show();
+                    break;
+                case SHOP_SAVED:
+                    Toast.makeText(requireContext(), R.string.shop_saved, Toast.LENGTH_SHORT).show();
+                    if (currentSubBinding instanceof AdminShopsBinding) {
+                        showShopsList((AdminShopsBinding) currentSubBinding);
+                    }
+                    break;
+                case SHOP_SAVE_FAILED:
+                    Toast.makeText(requireContext(), R.string.shop_save_failed, Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        });
+
+        viewModel.getAllShops().observe(getViewLifecycleOwner(), shops -> {
+            if (currentSubBinding instanceof AdminShopsBinding && shopAdapter != null) {
+                AdminShopsBinding b = (AdminShopsBinding) currentSubBinding;
+                shopAdapter.submitList(shops);
+                boolean empty = shops == null || shops.isEmpty();
+                b.shopsEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
+            }
+        });
+
+        viewModel.getShopSaving().observe(getViewLifecycleOwner(), saving -> {
+            if (currentSubBinding instanceof AdminShopsBinding) {
+                AdminShopsBinding b = (AdminShopsBinding) currentSubBinding;
+                boolean isSaving = Boolean.TRUE.equals(saving);
+                b.saveShopProgress.setVisibility(isSaving ? View.VISIBLE : View.GONE);
+                b.saveShopButton.setEnabled(!isSaving);
+                b.saveShopButton.setText(isSaving ? "" : getString(R.string.save_shop_details));
             }
         });
 
@@ -165,6 +230,26 @@ public class AdminDashboardFragment extends Fragment {
             }
         });
 
+        viewModel.getShopOwners().observe(getViewLifecycleOwner(), owners -> {
+            cachedShopOwners = owners == null ? new ArrayList<>() : new ArrayList<>(owners);
+
+            if (currentSubBinding instanceof AdminManageAdminsBinding && shopOwnerAdapter != null) {
+                AdminManageAdminsBinding b = (AdminManageAdminsBinding) currentSubBinding;
+                shopOwnerAdapter.submitList(new ArrayList<>(cachedShopOwners));
+                b.shopOwnersEmpty.setVisibility(cachedShopOwners.isEmpty() ? View.VISIBLE : View.GONE);
+            }
+        });
+
+        viewModel.getShopOwnerActionLoading().observe(getViewLifecycleOwner(), loading -> {
+            if (currentSubBinding instanceof AdminManageAdminsBinding) {
+                AdminManageAdminsBinding b = (AdminManageAdminsBinding) currentSubBinding;
+                boolean isLoading = Boolean.TRUE.equals(loading);
+                b.promoteShopOwnerProgress.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+                b.promoteShopOwnerButton.setEnabled(!isLoading);
+                b.promoteShopOwnerButton.setText(isLoading ? "" : getString(R.string.add_shop_owner));
+            }
+        });
+
         viewModel.getOrders().observe(getViewLifecycleOwner(), orders -> {
             cachedOrders = orders == null ? new ArrayList<>() : new ArrayList<>(orders);
 
@@ -172,6 +257,7 @@ public class AdminDashboardFragment extends Fragment {
                 AdminOrdersBinding b = (AdminOrdersBinding) currentSubBinding;
 
                 applyOrderFilter();
+                updateOrderStats(b);
 
                 orderAdapter.submitList(orders == null ? new ArrayList<>() : new ArrayList<>(orders));
                 boolean loading = Boolean.TRUE.equals(viewModel.getOrdersLoading().getValue());
@@ -197,30 +283,112 @@ public class AdminDashboardFragment extends Fragment {
             }
         });
 
-        renderTab(0);
     }
 
-    private void renderTab(int position) {
+    private void buildTabsForRole(boolean isAdmin, boolean isShopOwner) {
+        binding.adminTabs.removeAllTabs();
+        if (isShopOwner || isAdmin) {
+            // shop owner -> δικα του στατιστικα. admin (χωρις shop) -> platform-wide στατιστικα.
+            addTab(TabKey.OVERVIEW, R.string.admin_overview);
+        }
+        if (isShopOwner) {
+            addTab(TabKey.SHOP_DETAILS, R.string.admin_shop_details);
+            addTab(TabKey.ORDERS, R.string.admin_orders);
+            addTab(TabKey.ADD_PRODUCT, R.string.admin_add_product);
+        }
+        if (isAdmin) {
+            addTab(TabKey.SHOPS, R.string.admin_shops);
+            addTab(TabKey.MANAGE_ADMINS, R.string.admin_privilages);
+        }
+        // αν δεν εχει κανενα ρολο, popback
+        if (binding.adminTabs.getTabCount() == 0) {
+            NavHostFragment.findNavController(this).popBackStack();
+        }
+    }
+
+    private void addTab(TabKey key, int titleRes) {
+        TabLayout.Tab tab = binding.adminTabs.newTab()
+                .setText(titleRes)
+                .setTag(key);
+        binding.adminTabs.addTab(tab);
+    }
+
+    private void renderTab(TabKey key) {
         binding.adminContent.removeAllViews();
         currentSubBinding = null;
         orderAdapter = null;
         adminUserAdapter = null;
-        if (position == 0) showOverview();
-        else if (position == 1) showShopDetails();
-        else if (position == 2) showOrders();
-        else if (position == 3) showAddProduct();
-        else if (position == 4) showManageAdmins();
+        shopOwnerAdapter = null;
+        shopAdapter = null;
+        switch (key) {
+            case OVERVIEW: showOverview(); break;
+            case SHOP_DETAILS: showShopDetails(); break;
+            case ORDERS: showOrders(); break;
+            case ADD_PRODUCT: showAddProduct(); break;
+            case MANAGE_ADMINS: showManageAdmins(); break;
+            case SHOPS: showShops(); break;
+        }
     }
 
     private void showOverview() {
+        AdminSession session = AdminSession.getInstance();
+        String shopId = session.ownedShopId().getValue();
+        boolean isShopOwner = Boolean.TRUE.equals(session.isShopOwner().getValue());
+
+        if (isShopOwner && shopId != null && !shopId.isEmpty()) {
+            showShopOverview(shopId);
+        } else {
+            showPlatformOverview();
+        }
+    }
+
+    private void showShopOverview(String shopId) {
         AdminOverviewBinding b = AdminOverviewBinding.inflate(
                 LayoutInflater.from(requireContext()),
                 binding.adminContent,
                 false
         );
-
         binding.adminContent.addView(b.getRoot());
         currentSubBinding = b;
+
+        viewModel.getShopOverview().observe(getViewLifecycleOwner(), overview -> {
+            if (currentSubBinding != b || overview == null) return;
+            String shopName = overview.shop != null ? overview.shop.getName() : "";
+            b.shopNameText.setText(shopName);
+            b.shopInitialText.setText(shopName.isEmpty() ? "S" : shopName.substring(0, 1).toUpperCase());
+            b.shopStatusText.setVisibility(
+                    overview.shop != null && overview.shop.isActive() ? View.VISIBLE : View.GONE);
+
+            b.productsCountText.setText(String.valueOf(overview.productCount));
+            b.ordersCountText.setText(String.valueOf(overview.pendingOrderCount));
+            b.revenueText.setText(String.format(java.util.Locale.getDefault(),
+                    "€%.2f", overview.monthlyRevenue));
+            b.shopRatingText.setText(String.format(java.util.Locale.getDefault(),
+                    "%.1f", overview.rating));
+        });
+
+        viewModel.loadShopOverview(shopId);
+    }
+
+    private void showPlatformOverview() {
+        AdminPlatformOverviewBinding b = AdminPlatformOverviewBinding.inflate(
+                LayoutInflater.from(requireContext()),
+                binding.adminContent,
+                false
+        );
+        binding.adminContent.addView(b.getRoot());
+        currentSubBinding = b;
+
+        viewModel.getPlatformOverview().observe(getViewLifecycleOwner(), overview -> {
+            if (currentSubBinding != b || overview == null) return;
+            b.platformShopsCountText.setText(String.valueOf(overview.shopCount));
+            b.platformProductsCountText.setText(String.valueOf(overview.productCount));
+            b.platformPendingOrdersCountText.setText(String.valueOf(overview.pendingOrderCount));
+            b.platformRevenueText.setText(String.format(java.util.Locale.getDefault(),
+                    "€%.2f", overview.monthlyRevenue));
+        });
+
+        viewModel.loadPlatformOverview();
     }
 
     private void showShopDetails() {
@@ -233,17 +401,95 @@ public class AdminDashboardFragment extends Fragment {
         binding.adminContent.addView(b.getRoot());
         currentSubBinding = b;
 
-        // UI-only for now.
-        // Later, connect the logic that can read these fields:
-        // b.shopNameInput
-        // b.shopDescriptionInput
-        // b.shopCategoryDropdown
-        // b.shopEmailInput
-        // b.shopPhoneInput
-        // b.shopAddressInput
-        // b.openingHoursInput
-        // b.deliveryOptionsInput
-        // b.saveShopDetailsButton
+        String shopId = AdminSession.getInstance().ownedShopId().getValue();
+        if (shopId == null || shopId.isEmpty()) {
+            // δεν εχει shop ακομα — απενεργοποιουμε save
+            b.saveShopDetailsButton.setEnabled(false);
+            return;
+        }
+
+        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_list_item_1, CATEGORIES);
+        b.shopCategoryDropdown.setAdapter(categoryAdapter);
+
+        // φορτωνουμε ζωντανα το shop ωστε το form να ανανεωνεται οταν αλλαζει
+        viewModel.getAllShops().observe(getViewLifecycleOwner(), shops -> {
+            if (currentSubBinding != b || shops == null) return;
+            Shop mine = null;
+            for (Shop s : shops) {
+                if (shopId.equals(s.getId())) { mine = s; break; }
+            }
+            if (mine == null) return;
+            shopBeingEdited = mine;
+            bindShopDetailsForm(b, mine);
+        });
+        viewModel.loadAllShops();
+
+        b.saveShopDetailsButton.setOnClickListener(v -> submitShopDetails(b));
+
+        viewModel.getShopSaving().observe(getViewLifecycleOwner(), saving -> {
+            if (currentSubBinding != b) return;
+            boolean isSaving = Boolean.TRUE.equals(saving);
+            b.saveShopDetailsButton.setEnabled(!isSaving);
+            b.saveShopDetailsButton.setText(isSaving
+                    ? getString(R.string.image_uploading)
+                    : getString(R.string.save_shop_details));
+        });
+    }
+
+    private void bindShopDetailsForm(AdminShopDetailsBinding b, Shop shop) {
+        String name = shop.getName() != null ? shop.getName() : "";
+        b.shopPreviewName.setText(name);
+        b.shopInitialPreview.setText(name.isEmpty() ? "S" : name.substring(0, 1).toUpperCase());
+        b.shopPreviewStatus.setVisibility(shop.isActive() ? View.VISIBLE : View.GONE);
+
+        // δεν θελουμε να τσακιζουμε καθε φορα ο,τι εχει πληκτρολογησει ο χρηστης.
+        // Setarroume μονο αν το πεδιο ειναι ακομα στην default τιμη του ή κενο.
+        setIfBlank(b.shopNameInput, name);
+        setIfBlank(b.shopDescriptionInput, shop.getDescription());
+        setIfBlank(b.shopCategoryDropdown, shop.getMainCategory());
+        setIfBlank(b.shopEmailInput, shop.getBusinessEmail());
+        setIfBlank(b.shopPhoneInput, shop.getBusinessPhone());
+        setIfBlank(b.shopAddressInput, shop.getAddress());
+        setIfBlank(b.openingHoursInput, shop.getOpeningHours());
+        setIfBlank(b.deliveryOptionsInput, shop.getDeliveryOptions());
+    }
+
+    private static void setIfBlank(android.widget.EditText input, String value) {
+        if (value == null) return;
+        String current = input.getText() != null ? input.getText().toString() : "";
+        if (current.isEmpty()) {
+            input.setText(value);
+        }
+    }
+
+    private static void setIfBlank(com.google.android.material.textfield.MaterialAutoCompleteTextView input,
+                                   String value) {
+        if (value == null) return;
+        String current = input.getText() != null ? input.getText().toString() : "";
+        if (current.isEmpty()) {
+            input.setText(value, false);
+        }
+    }
+
+    private void submitShopDetails(AdminShopDetailsBinding b) {
+        if (shopBeingEdited == null) return;
+        Shop shop = copyOf(shopBeingEdited);
+        shop.setName(text(b.shopNameInput));
+        shop.setDescription(text(b.shopDescriptionInput));
+        shop.setMainCategory(text(b.shopCategoryDropdown));
+        shop.setBusinessEmail(text(b.shopEmailInput));
+        shop.setBusinessPhone(text(b.shopPhoneInput));
+        shop.setAddress(text(b.shopAddressInput));
+        shop.setOpeningHours(text(b.openingHoursInput));
+        shop.setDeliveryOptions(text(b.deliveryOptionsInput));
+
+        if (shop.getName().isEmpty()) {
+            Toast.makeText(requireContext(), R.string.all_required_fields_missing,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        viewModel.saveShop(shop);
     }
 
     private void showOrders() {
@@ -265,12 +511,27 @@ public class AdminDashboardFragment extends Fragment {
 
         setupOrderFilters(b);
         applyOrderFilter();
+        updateOrderStats(b);
 
         boolean loading = Boolean.TRUE.equals(viewModel.getOrdersLoading().getValue());
         b.adminOrdersProgress.setVisibility(loading ? View.VISIBLE : View.GONE);
         b.adminOrdersEmpty.setVisibility(cachedOrders.isEmpty() && !loading ? View.VISIBLE : View.GONE);
 
-        viewModel.loadOrders();
+        String shopId = AdminSession.getInstance().ownedShopId().getValue();
+        viewModel.loadShopOrders(shopId);
+    }
+
+    private void updateOrderStats(AdminOrdersBinding b) {
+        int total = cachedOrders.size();
+        int pending = 0, completed = 0;
+        for (Order o : cachedOrders) {
+            String s = o.getStatus();
+            if (AdminOrderAdapter.STATUS_PENDING.equals(s)) pending++;
+            else if (AdminOrderAdapter.STATUS_COMPLETED.equals(s)) completed++;
+        }
+        b.totalOrdersCountText.setText(String.valueOf(total));
+        b.pendingOrdersCountText.setText(String.valueOf(pending));
+        b.completedOrdersCountText.setText(String.valueOf(completed));
     }
 
     private void showAddProduct() {
@@ -369,7 +630,166 @@ public class AdminDashboardFragment extends Fragment {
             viewModel.promoteAdminByEmail(email);
         });
 
+        shopOwnerAdapter = new AdminUserAdapter(currentUid, user ->
+                new AlertDialog.Builder(requireContext())
+                        .setTitle(R.string.revoke_admin)
+                        .setMessage(getString(R.string.confirm_revoke_shop_owner,
+                                user.getEmail() != null ? user.getEmail() : user.getDisplayName()))
+                        .setPositiveButton(android.R.string.ok,
+                                (d, w) -> viewModel.revokeShopOwner(user))
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show());
+
+        b.shopOwnersRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
+        b.shopOwnersRecycler.setAdapter(shopOwnerAdapter);
+
+        shopOwnerAdapter.submitList(new ArrayList<>(cachedShopOwners));
+        b.shopOwnersEmpty.setVisibility(cachedShopOwners.isEmpty() ? View.VISIBLE : View.GONE);
+
+        // dropdown με ολα τα shops για το assignment
+        List<Shop> shopsForDropdown = viewModel.getAllShops().getValue();
+        if (shopsForDropdown == null) shopsForDropdown = new ArrayList<>();
+        wireShopDropdown(b, shopsForDropdown);
+
+        viewModel.getAllShops().observe(getViewLifecycleOwner(), shops -> {
+            if (currentSubBinding == b) {
+                wireShopDropdown(b, shops != null ? shops : new ArrayList<>());
+            }
+        });
+
+        b.promoteShopOwnerButton.setOnClickListener(v -> {
+            String email = text(b.shopOwnerEmailInput);
+            if (email.isEmpty()) {
+                Toast.makeText(requireContext(), R.string.all_required_fields_missing, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Object selected = b.shopOwnerShopInput.getTag();
+            if (!(selected instanceof String) || ((String) selected).isEmpty()) {
+                Toast.makeText(requireContext(), R.string.shop_required, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            viewModel.promoteShopOwnerByEmail(email, (String) selected);
+        });
+
         viewModel.loadAdmins();
+        viewModel.loadShopOwners();
+        viewModel.loadAllShops();
+    }
+
+    private void wireShopDropdown(AdminManageAdminsBinding b, List<Shop> shops) {
+        String[] names = new String[shops.size()];
+        for (int i = 0; i < shops.size(); i++) names[i] = shops.get(i).getName();
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_list_item_1, names);
+        b.shopOwnerShopInput.setAdapter(adapter);
+
+        b.shopOwnerShopInput.setOnItemClickListener((parent, view, position, id) -> {
+            if (position >= 0 && position < shops.size()) {
+                b.shopOwnerShopInput.setTag(shops.get(position).getId());
+            }
+        });
+
+        // αν εχουμε μονο ενα shop, προ-επιλεξτο
+        if (shops.size() == 1) {
+            b.shopOwnerShopInput.setText(shops.get(0).getName(), false);
+            b.shopOwnerShopInput.setTag(shops.get(0).getId());
+        }
+    }
+
+    private void showShops() {
+        AdminShopsBinding b = AdminShopsBinding.inflate(
+                LayoutInflater.from(requireContext()), binding.adminContent, false);
+        binding.adminContent.addView(b.getRoot());
+        currentSubBinding = b;
+
+        shopAdapter = new ShopAdapter(shop -> showShopEditor(b, shop));
+        b.shopsRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
+        b.shopsRecycler.setAdapter(shopAdapter);
+
+        // category dropdown
+        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_list_item_1, CATEGORIES);
+        b.editorShopCategoryInput.setAdapter(categoryAdapter);
+
+        b.addShopButton.setOnClickListener(v -> showShopEditor(b, null));
+        b.cancelShopEditorButton.setOnClickListener(v -> showShopsList(b));
+        b.saveShopButton.setOnClickListener(v -> submitShopEditor(b));
+
+        // αρχικη κατασταση — list
+        showShopsList(b);
+
+        List<Shop> current = viewModel.getAllShops().getValue();
+        if (current != null) {
+            shopAdapter.submitList(current);
+            b.shopsEmpty.setVisibility(current.isEmpty() ? View.VISIBLE : View.GONE);
+        }
+
+        viewModel.loadAllShops();
+    }
+
+    private void showShopsList(AdminShopsBinding b) {
+        shopBeingEdited = null;
+        b.shopsListContainer.setVisibility(View.VISIBLE);
+        b.shopEditorContainer.setVisibility(View.GONE);
+    }
+
+    private void showShopEditor(AdminShopsBinding b, @Nullable Shop shop) {
+        shopBeingEdited = shop;
+        b.shopsListContainer.setVisibility(View.GONE);
+        b.shopEditorContainer.setVisibility(View.VISIBLE);
+
+        b.shopEditorTitle.setText(shop == null ? R.string.add_shop : R.string.edit_shop);
+        b.editorShopNameInput.setText(shop != null ? shop.getName() : "");
+        b.editorShopDescriptionInput.setText(shop != null ? shop.getDescription() : "");
+        b.editorShopCategoryInput.setText(
+                shop != null ? shop.getMainCategory() : "", false);
+        b.editorShopEmailInput.setText(shop != null ? shop.getBusinessEmail() : "");
+        b.editorShopPhoneInput.setText(shop != null ? shop.getBusinessPhone() : "");
+        b.editorShopAddressInput.setText(shop != null ? shop.getAddress() : "");
+        b.editorShopActiveSwitch.setChecked(shop == null || shop.isActive());
+    }
+
+    private void submitShopEditor(AdminShopsBinding b) {
+        String name = text(b.editorShopNameInput);
+        if (name.isEmpty()) {
+            Toast.makeText(requireContext(), R.string.all_required_fields_missing, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Shop shop = shopBeingEdited != null ? copyOf(shopBeingEdited) : new Shop();
+        shop.setName(name);
+        shop.setDescription(text(b.editorShopDescriptionInput));
+        shop.setMainCategory(text(b.editorShopCategoryInput));
+        shop.setBusinessEmail(text(b.editorShopEmailInput));
+        shop.setBusinessPhone(text(b.editorShopPhoneInput));
+        shop.setAddress(text(b.editorShopAddressInput));
+        shop.setActive(b.editorShopActiveSwitch.isChecked());
+        if (shopBeingEdited == null) {
+            shop.setCreatedAt(System.currentTimeMillis());
+        }
+        viewModel.saveShop(shop);
+    }
+
+    private Shop copyOf(Shop other) {
+        Shop s = new Shop();
+        s.setId(other.getId());
+        s.setOwnerId(other.getOwnerId());
+        s.setOwnerEmail(other.getOwnerEmail());
+        s.setName(other.getName());
+        s.setDescription(other.getDescription());
+        s.setMainCategory(other.getMainCategory());
+        s.setBusinessEmail(other.getBusinessEmail());
+        s.setBusinessPhone(other.getBusinessPhone());
+        s.setAddress(other.getAddress());
+        s.setOpeningHours(other.getOpeningHours());
+        s.setDeliveryOptions(other.getDeliveryOptions());
+        s.setRating(other.getRating());
+        s.setProductCount(other.getProductCount());
+        s.setActive(other.isActive());
+        s.setLatitude(other.getLatitude());
+        s.setLongitude(other.getLongitude());
+        s.setCreatedAt(other.getCreatedAt());
+        return s;
     }
 
     private void resetAddProductForm() {
@@ -393,6 +813,11 @@ public class AdminDashboardFragment extends Fragment {
 
         b.filterPending.setOnClickListener(v -> {
             selectedOrderFilter = AdminOrderAdapter.STATUS_PENDING;
+            applyOrderFilter();
+        });
+
+        b.filterInTransit.setOnClickListener(v -> {
+            selectedOrderFilter = AdminOrderAdapter.STATUS_IN_TRANSIT;
             applyOrderFilter();
         });
 
@@ -427,6 +852,7 @@ public class AdminDashboardFragment extends Fragment {
     private void updateFilterChipStyles(AdminOrdersBinding b) {
         setChipSelected(b.filterAll, "All".equals(selectedOrderFilter));
         setChipSelected(b.filterPending, AdminOrderAdapter.STATUS_PENDING.equals(selectedOrderFilter));
+        setChipSelected(b.filterInTransit, AdminOrderAdapter.STATUS_IN_TRANSIT.equals(selectedOrderFilter));
         setChipSelected(b.filterCompleted, AdminOrderAdapter.STATUS_COMPLETED.equals(selectedOrderFilter));
     }
 

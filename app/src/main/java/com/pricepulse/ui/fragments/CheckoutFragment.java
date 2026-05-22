@@ -215,7 +215,13 @@ public class CheckoutFragment extends Fragment {
                                 currentDeliveryFee,
                                 currentDeliveryDiscountAmount,
                                 currentFinalTotalAmount,
-                                locationDiscountApplied
+                                locationDiscountApplied,
+                                text(binding.fullNameInput),
+                                text(binding.phoneInput),
+                                text(binding.addressInput),
+                                text(binding.cityInput),
+                                text(binding.postalCodeInput),
+                                selectedPaymentMethod
                         );
                     }
 

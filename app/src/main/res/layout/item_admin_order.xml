@@ -170,6 +170,30 @@
                 android:textSize="13sp"
                 android:textColor="@color/skroutz_text_secondary" />
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/skroutz_border" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/shipping_details_label"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/skroutz_text_primary" />
+
+            <TextView
+                android:id="@+id/adminOrderShipping"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textSize="13sp"
+                android:textColor="@color/skroutz_text_secondary"
+                android:lineSpacingExtra="2sp" />
+
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

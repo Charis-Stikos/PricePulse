@@ -12,6 +12,7 @@ import com.google.firebase.storage.StorageReference;
 import com.pricepulse.model.Address;
 import com.pricepulse.model.Order;
 import com.pricepulse.model.Product;
+import com.pricepulse.model.Shop;
 import com.pricepulse.model.User;
 
 import java.util.UUID;
@@ -33,6 +34,7 @@ public class FirebaseRepository {
     private final com.google.firebase.firestore.CollectionReference usersCollection = firestore.collection("users");
     private final com.google.firebase.firestore.CollectionReference ordersCollection = firestore.collection("orders");
     private final com.google.firebase.firestore.CollectionReference addressesCollection = firestore.collection("addresses");
+    private final com.google.firebase.firestore.CollectionReference shopsCollection = firestore.collection("shops");
 
     public ListenerRegistration listenToProducts(long limit, RepoCallback<List<Product>> callback) {
         return productsCollection
@@ -160,6 +162,7 @@ public class FirebaseRepository {
                     List<Product> filtered = new ArrayList<>();
                     String q = query.toLowerCase();
                     for (Product p : all) {
+                        if (!p.isShopActive()) continue;
                         if (p.getTitle().toLowerCase().contains(q)
                                 || p.getCategory().toLowerCase().contains(q)) {
                             filtered.add(p);
@@ -389,6 +392,36 @@ public class FirebaseRepository {
                 });
     }
 
+    public void submitReview(String productId, com.pricepulse.model.Review review,
+                             RepoCallback<Boolean> callback) {
+        com.google.firebase.firestore.DocumentReference ref = productsCollection.document(productId);
+        firestore.runTransaction(transaction -> {
+            com.google.firebase.firestore.DocumentSnapshot snap = transaction.get(ref);
+            Product p = snap.toObject(Product.class);
+            if (p == null) {
+                throw new IllegalStateException("Product not found");
+            }
+            List<com.pricepulse.model.Review> reviews = p.getReviews() != null
+                    ? new ArrayList<>(p.getReviews()) : new ArrayList<>();
+            reviews.add(review);
+
+            double sum = 0.0;
+            for (com.pricepulse.model.Review r : reviews) sum += r.getRating();
+            double newAverage = reviews.isEmpty() ? 0.0 : sum / reviews.size();
+
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("reviews", reviews);
+            updates.put("rating", newAverage);
+            updates.put("reviewCount", reviews.size());
+            transaction.update(ref, updates);
+            return null;
+        }).addOnSuccessListener(v -> callback.onComplete(true))
+          .addOnFailureListener(e -> {
+              Log.e(TAG, "submitReview failed", e);
+              callback.onComplete(false);
+          });
+    }
+
     public void getProductsByIds(List<String> ids, RepoCallback<List<Product>> callback) {
         if (ids.isEmpty()) {
             callback.onComplete(new ArrayList<>());
@@ -404,5 +437,188 @@ public class FirebaseRepository {
                 }
             });
         }
+    }
+
+    public ListenerRegistration listenToAllProducts(RepoCallback<List<Product>> callback) {
+        return productsCollection.addSnapshotListener((snapshot, error) -> {
+            if (error != null) {
+                Log.e(TAG, "listenToAllProducts failed", error);
+                callback.onComplete(new ArrayList<>());
+                return;
+            }
+            callback.onComplete(snapshot != null
+                    ? snapshot.toObjects(Product.class) : new ArrayList<>());
+        });
+    }
+
+    public ListenerRegistration listenToShops(RepoCallback<List<Shop>> callback) {
+        return shopsCollection.addSnapshotListener((snapshot, error) -> {
+            if (error != null) {
+                Log.e(TAG, "listenToShops failed", error);
+                callback.onComplete(new ArrayList<>());
+                return;
+            }
+            callback.onComplete(snapshot != null
+                    ? snapshot.toObjects(Shop.class) : new ArrayList<>());
+        });
+    }
+
+    public ListenerRegistration listenToShop(String shopId, RepoCallback<Shop> callback) {
+        return shopsCollection.document(shopId).addSnapshotListener((snapshot, error) -> {
+            if (error != null) {
+                Log.e(TAG, "listenToShop failed", error);
+                callback.onComplete(null);
+                return;
+            }
+            callback.onComplete(snapshot != null ? snapshot.toObject(Shop.class) : null);
+        });
+    }
+
+    public void getShop(String shopId, RepoCallback<Shop> callback) {
+        shopsCollection.document(shopId).get()
+                .addOnSuccessListener(snapshot -> callback.onComplete(snapshot.toObject(Shop.class)))
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "getShop failed", e);
+                    callback.onComplete(null);
+                });
+    }
+
+    public void saveShop(Shop shop, RepoCallback<Boolean> callback) {
+        if (shop.getId() == null || shop.getId().isEmpty()) {
+            shop.setId(UUID.randomUUID().toString());
+        }
+        shopsCollection.document(shop.getId()).set(shop)
+                .addOnSuccessListener(v -> callback.onComplete(true))
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "saveShop failed", e);
+                    callback.onComplete(false);
+                });
+    }
+
+    public void propagateShopName(String shopId, String newName, RepoCallback<Boolean> callback) {
+        propagateShopFields(shopId, newName, null, callback);
+    }
+
+    public void propagateShopFields(String shopId, String newName, Boolean newActive,
+                                    RepoCallback<Boolean> callback) {
+        productsCollection.whereEqualTo("shopId", shopId).get()
+                .addOnSuccessListener(snapshot -> {
+                    if (snapshot.isEmpty()) {
+                        callback.onComplete(true);
+                        return;
+                    }
+                    com.google.firebase.firestore.WriteBatch batch = firestore.batch();
+                    for (com.google.firebase.firestore.DocumentSnapshot doc : snapshot.getDocuments()) {
+                        if (newName != null) batch.update(doc.getReference(), "shopName", newName);
+                        if (newActive != null) batch.update(doc.getReference(), "shopActive", newActive);
+                    }
+                    batch.commit()
+                            .addOnSuccessListener(v -> callback.onComplete(true))
+                            .addOnFailureListener(e -> {
+                                Log.e(TAG, "propagateShopFields batch failed", e);
+                                callback.onComplete(false);
+                            });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "propagateShopFields query failed", e);
+                    callback.onComplete(false);
+                });
+    }
+
+    public ListenerRegistration listenToProductsByShop(String shopId, RepoCallback<List<Product>> callback) {
+        return productsCollection.whereEqualTo("shopId", shopId)
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null) {
+                        Log.e(TAG, "listenToProductsByShop failed", error);
+                        callback.onComplete(new ArrayList<>());
+                        return;
+                    }
+                    callback.onComplete(snapshot != null
+                            ? snapshot.toObjects(Product.class) : new ArrayList<>());
+                });
+    }
+
+    public ListenerRegistration listenToOrdersByShop(String shopId, RepoCallback<List<Order>> callback) {
+        return ordersCollection.whereEqualTo("shopId", shopId)
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null) {
+                        Log.e(TAG, "listenToOrdersByShop failed", error);
+                        callback.onComplete(new ArrayList<>());
+                        return;
+                    }
+                    List<Order> orders = snapshot != null
+                            ? snapshot.toObjects(Order.class) : new ArrayList<>();
+                    Collections.sort(orders, (a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+                    callback.onComplete(orders);
+                });
+    }
+
+    public ListenerRegistration listenToShopOwners(RepoCallback<List<User>> callback) {
+        return usersCollection.whereEqualTo("shopOwner", true).addSnapshotListener((snapshot, error) -> {
+            if (error != null) {
+                Log.e(TAG, "listenToShopOwners failed", error);
+                callback.onComplete(new ArrayList<>());
+                return;
+            }
+            callback.onComplete(snapshot != null ? snapshot.toObjects(User.class) : new ArrayList<>());
+        });
+    }
+
+    public void setUserShopOwner(String uid, boolean isShopOwner, String ownedShopId,
+                                 RepoCallback<Boolean> callback) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("shopOwner", isShopOwner);
+        data.put("ownedShopId", isShopOwner ? ownedShopId : "");
+        usersCollection.document(uid).set(data, SetOptions.merge())
+                .addOnSuccessListener(v -> callback.onComplete(true))
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "setUserShopOwner failed", e);
+                    callback.onComplete(false);
+                });
+    }
+
+    public void linkShopOwner(String uid, String email, String shopId,
+                              RepoCallback<Boolean> callback) {
+        com.google.firebase.firestore.WriteBatch batch = firestore.batch();
+
+        Map<String, Object> userUpdate = new HashMap<>();
+        userUpdate.put("shopOwner", true);
+        userUpdate.put("ownedShopId", shopId);
+        batch.set(usersCollection.document(uid), userUpdate, SetOptions.merge());
+
+        Map<String, Object> shopUpdate = new HashMap<>();
+        shopUpdate.put("ownerId", uid);
+        shopUpdate.put("ownerEmail", email != null ? email : "");
+        batch.set(shopsCollection.document(shopId), shopUpdate, SetOptions.merge());
+
+        batch.commit()
+                .addOnSuccessListener(v -> callback.onComplete(true))
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "linkShopOwner failed", e);
+                    callback.onComplete(false);
+                });
+    }
+
+    public void unlinkShopOwner(String uid, String shopId, RepoCallback<Boolean> callback) {
+        com.google.firebase.firestore.WriteBatch batch = firestore.batch();
+
+        Map<String, Object> userUpdate = new HashMap<>();
+        userUpdate.put("shopOwner", false);
+        userUpdate.put("ownedShopId", "");
+        batch.set(usersCollection.document(uid), userUpdate, SetOptions.merge());
+
+        if (shopId != null && !shopId.isEmpty()) {
+            Map<String, Object> shopUpdate = new HashMap<>();
+            shopUpdate.put("ownerId", "");
+            shopUpdate.put("ownerEmail", "");
+            batch.set(shopsCollection.document(shopId), shopUpdate, SetOptions.merge());
+        }
+
+        batch.commit()
+                .addOnSuccessListener(v -> callback.onComplete(true))
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "unlinkShopOwner failed", e);
+                    callback.onComplete(false);
+                });
     }
 }

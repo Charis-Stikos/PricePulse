@@ -66,6 +66,20 @@ public class CartViewModel extends ViewModel {
                          double deliveryDiscountAmount,
                          double finalTotalAmount,
                          boolean locationDiscountApplied) {
+        checkout(deliveryFee, deliveryDiscountAmount, finalTotalAmount, locationDiscountApplied,
+                "", "", "", "", "", "");
+    }
+
+    public void checkout(double deliveryFee,
+                         double deliveryDiscountAmount,
+                         double finalTotalAmount,
+                         boolean locationDiscountApplied,
+                         String shippingFullName,
+                         String shippingPhone,
+                         String shippingAddress,
+                         String shippingCity,
+                         String shippingPostalCode,
+                         String paymentMethod) {
         List<CartItem> items = cartManager.getItems().getValue();
         if (items == null || items.isEmpty()) return;
 
@@ -75,6 +89,9 @@ public class CartViewModel extends ViewModel {
             FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
             Double totalValue = totalAmount.getValue();
             double total = totalValue != null ? totalValue : 0.0;
+
+            // για τωρα ολα τα cart items μοιραζονται το ιδιο shop (single-shop prototype)
+            String shopId = items.get(0).getShopId();
 
             Order order = new Order(
                     UUID.randomUUID().toString(),
@@ -88,6 +105,13 @@ public class CartViewModel extends ViewModel {
                     finalTotalAmount,
                     locationDiscountApplied
             );
+            order.setShopId(shopId);
+            order.setShippingFullName(shippingFullName);
+            order.setShippingPhone(shippingPhone);
+            order.setShippingAddress(shippingAddress);
+            order.setShippingCity(shippingCity);
+            order.setShippingPostalCode(shippingPostalCode);
+            order.setPaymentMethod(paymentMethod);
 
             repository.saveOrder(order, success -> {
                 if (success) {
