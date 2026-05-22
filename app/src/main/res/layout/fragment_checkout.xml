@@ -183,6 +183,81 @@
 
             </androidx.cardview.widget.CardView>
 
+            <!-- SAVED ADDRESS PICKER CARD -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/savedAddressCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardElevation="0dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/savedAddressCardRoot"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground">
+
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_circle_orange_soft">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_location"
+                            app:tint="@color/skroutz_orange"/>
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="12dp">
+
+                        <TextView
+                            android:id="@+id/savedAddressTitleText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/select_saved_address"
+                            android:textStyle="bold"
+                            android:textSize="15sp"
+                            android:textColor="@color/skroutz_text_primary"/>
+
+                        <TextView
+                            android:id="@+id/savedAddressSubtitleText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/select_saved_address_subtitle"
+                            android:textSize="13sp"
+                            android:textColor="@color/skroutz_text_secondary"
+                            android:maxLines="2"
+                            android:ellipsize="end"/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/savedAddressChangeText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/change_address"
+                        android:textStyle="bold"
+                        android:textSize="13sp"
+                        android:textColor="@color/skroutz_blue"
+                        android:visibility="gone"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
             <!-- DELIVERY DETAILS TITLE -->
             <TextView
                 android:layout_width="wrap_content"

@@ -5,5 +5,7 @@ public enum ProfileTabState {
     WISHLIST,
     ORDERS,
     ACCOUNT_SETTINGS,
-    HELP_CENTER
+    HELP_CENTER,
+    SAVED_ADDRESSES,
+    ADDRESS_EDITOR
 }

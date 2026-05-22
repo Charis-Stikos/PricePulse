@@ -203,4 +203,34 @@
     <string name="location_service_unavailable">Location service is unavailable. Please try again.</string>
     <string name="location_service_disabled">Location service is disabled. Please enable location services and try again.</string>
     <string name="location_discount_approved">Location discount approved. Address verified within %.1f km from you and %.1f km from the shop.</string>
+
+    <string name="saved_addresses">Saved Addresses</string>
+    <string name="add_new_address">Add new address</string>
+    <string name="edit_address">Edit address</string>
+    <string name="address_editor_title">Address details</string>
+    <string name="address_label">Label</string>
+    <string name="address_label_home">Home</string>
+    <string name="address_label_work">Work</string>
+    <string name="address_label_other">Other</string>
+    <string name="address_set_default">Set as default</string>
+    <string name="address_default_badge">Default</string>
+    <string name="address_save">Save address</string>
+    <string name="address_delete">Delete</string>
+    <string name="address_edit">Edit</string>
+    <string name="address_set_as_default">Set as default</string>
+    <string name="address_delete_confirm_title">Delete address?</string>
+    <string name="address_delete_confirm_message">This address will be removed from your saved addresses.</string>
+    <string name="address_saved_toast">Address saved</string>
+    <string name="address_save_failed_toast">Could not save address. Please try again.</string>
+    <string name="address_deleted_toast">Address deleted</string>
+    <string name="address_delete_failed_toast">Could not delete address. Please try again.</string>
+    <string name="default_address_updated_toast">Default address updated</string>
+    <string name="empty_addresses_title">No saved addresses</string>
+    <string name="empty_addresses_subtitle">Add an address to autofill it at checkout.</string>
+
+    <string name="select_saved_address">Select a saved address</string>
+    <string name="select_saved_address_subtitle">Tap to autofill your delivery details.</string>
+    <string name="change_address">Change</string>
+    <string name="picker_no_saved_addresses">You have no saved addresses yet. Add some from your account.</string>
+    <string name="picker_title">Choose an address</string>
 </resources>

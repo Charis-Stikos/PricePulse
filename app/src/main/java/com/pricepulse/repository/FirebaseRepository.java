@@ -9,6 +9,7 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.pricepulse.model.Address;
 import com.pricepulse.model.Order;
 import com.pricepulse.model.Product;
 import com.pricepulse.model.User;
@@ -31,6 +32,7 @@ public class FirebaseRepository {
     private final com.google.firebase.firestore.CollectionReference productsCollection = firestore.collection("products");
     private final com.google.firebase.firestore.CollectionReference usersCollection = firestore.collection("users");
     private final com.google.firebase.firestore.CollectionReference ordersCollection = firestore.collection("orders");
+    private final com.google.firebase.firestore.CollectionReference addressesCollection = firestore.collection("addresses");
 
     public ListenerRegistration listenToProducts(long limit, RepoCallback<List<Product>> callback) {
         return productsCollection
@@ -323,6 +325,67 @@ public class FirebaseRepository {
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "uploadProductImage failed", e);
                     callback.onComplete(null);
+                });
+    }
+
+    public ListenerRegistration listenToUserAddresses(String uid, RepoCallback<List<Address>> callback) {
+        return addressesCollection.whereEqualTo("userId", uid).addSnapshotListener((snapshot, error) -> {
+            if (error != null) {
+                Log.e(TAG, "listenToUserAddresses failed", error);
+                callback.onComplete(new ArrayList<>());
+                return;
+            }
+            List<Address> addresses = snapshot != null
+                    ? snapshot.toObjects(Address.class) : new ArrayList<>();
+            Collections.sort(addresses, (a, b) -> {
+                if (a.isDefaultAddress() != b.isDefaultAddress()) {
+                    return a.isDefaultAddress() ? -1 : 1;
+                }
+                return Long.compare(b.getTimestamp(), a.getTimestamp());
+            });
+            callback.onComplete(addresses);
+        });
+    }
+
+    public void saveAddress(Address address, RepoCallback<Boolean> callback) {
+        if (address.getId() == null || address.getId().isEmpty()) {
+            address.setId(UUID.randomUUID().toString());
+        }
+        addressesCollection.document(address.getId()).set(address)
+                .addOnSuccessListener(v -> callback.onComplete(true))
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "saveAddress failed", e);
+                    callback.onComplete(false);
+                });
+    }
+
+    public void deleteAddress(String addressId, RepoCallback<Boolean> callback) {
+        addressesCollection.document(addressId).delete()
+                .addOnSuccessListener(v -> callback.onComplete(true))
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "deleteAddress failed", e);
+                    callback.onComplete(false);
+                });
+    }
+
+    public void setDefaultAddress(String uid, String addressId, RepoCallback<Boolean> callback) {
+        addressesCollection.whereEqualTo("userId", uid).get()
+                .addOnSuccessListener(snapshot -> {
+                    com.google.firebase.firestore.WriteBatch batch = firestore.batch();
+                    for (com.google.firebase.firestore.DocumentSnapshot doc : snapshot.getDocuments()) {
+                        boolean shouldBeDefault = doc.getId().equals(addressId);
+                        batch.update(doc.getReference(), "defaultAddress", shouldBeDefault);
+                    }
+                    batch.commit()
+                            .addOnSuccessListener(v -> callback.onComplete(true))
+                            .addOnFailureListener(e -> {
+                                Log.e(TAG, "setDefaultAddress batch failed", e);
+                                callback.onComplete(false);
+                            });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "setDefaultAddress query failed", e);
+                    callback.onComplete(false);
                 });
     }
 

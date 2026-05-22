@@ -30,11 +30,19 @@ import android.location.LocationManager;
 
 import com.pricepulse.util.LocationDiscountHelper;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.pricepulse.R;
 import com.pricepulse.databinding.FragmentCheckoutBinding;
+import com.pricepulse.model.Address;
+import com.pricepulse.repository.FirebaseRepository;
 import com.pricepulse.ui.adapters.CheckoutSummaryAdapter;
 import com.pricepulse.viewmodel.CartUiState;
 import com.pricepulse.viewmodel.CartViewModel;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 
@@ -48,6 +56,11 @@ public class CheckoutFragment extends Fragment {
     private String selectedPaymentMethod = "card";
 
     private ActivityResultLauncher<String> locationPermissionLauncher;
+
+    private final FirebaseRepository repository = new FirebaseRepository();
+    private ListenerRegistration addressesRegistration;
+    private List<Address> savedAddresses = new ArrayList<>();
+    private boolean defaultAddressApplied = false;
 
     private static final double DELIVERY_FEE = 3.50;
 
@@ -92,6 +105,9 @@ public class CheckoutFragment extends Fragment {
         });
 
         updatePaymentMethodUi();
+
+        binding.savedAddressCardRoot.setOnClickListener(v -> openAddressPicker());
+        startListeningForAddresses();
 
         locationPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
@@ -465,9 +481,73 @@ public class CheckoutFragment extends Fragment {
                 : "";
     }
 
+    private void startListeningForAddresses() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null || user.isAnonymous()) {
+            savedAddresses = new ArrayList<>();
+            updateSavedAddressCard();
+            return;
+        }
+        addressesRegistration = repository.listenToUserAddresses(user.getUid(), result -> {
+            if (binding == null) return;
+            savedAddresses = result != null ? result : new ArrayList<>();
+            updateSavedAddressCard();
+            // αυτοματο autofill μονο μια φορα, στην πρωτη εμφανιση default address
+            if (!defaultAddressApplied) {
+                for (Address a : savedAddresses) {
+                    if (a.isDefaultAddress()) {
+                        applyAddressToForm(a, false);
+                        defaultAddressApplied = true;
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
+    private void updateSavedAddressCard() {
+        if (binding == null) return;
+        boolean hasAddresses = !savedAddresses.isEmpty();
+        binding.savedAddressCard.setVisibility(hasAddresses ? View.VISIBLE : View.GONE);
+    }
+
+    private void openAddressPicker() {
+        if (savedAddresses.isEmpty()) return;
+        SavedAddressPickerBottomSheetFragment sheet = SavedAddressPickerBottomSheetFragment.create(
+                new ArrayList<>(savedAddresses),
+                picked -> applyAddressToForm(picked, true)
+        );
+        sheet.show(getChildFragmentManager(), "saved_address_picker");
+    }
+
+    private void applyAddressToForm(Address address, boolean showAsSelected) {
+        if (binding == null || address == null) return;
+        binding.fullNameInput.setText(address.getFullName());
+        binding.phoneInput.setText(address.getPhone());
+        binding.addressInput.setText(address.getAddressLine());
+        binding.cityInput.setText(address.getCity());
+        binding.postalCodeInput.setText(address.getPostalCode());
+
+        binding.savedAddressTitleText.setText(address.getLabel());
+        binding.savedAddressSubtitleText.setText(
+                address.getAddressLine() + ", " + address.getPostalCode() + " " + address.getCity()
+        );
+        binding.savedAddressChangeText.setVisibility(View.VISIBLE);
+
+        // η διευθυνση αλλαξε, οπότε καθε προηγουμενη επαληθευση τοποθεσιας ακυρωνεται
+        resetLocationDiscount();
+        binding.locationDiscountStatusText.setText(R.string.location_discount_not_checked);
+        binding.locationDiscountStatusText.setTextColor(
+                requireContext().getColor(R.color.skroutz_text_secondary));
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (addressesRegistration != null) {
+            addressesRegistration.remove();
+            addressesRegistration = null;
+        }
         binding = null;
     }
 }

@@ -20,15 +20,19 @@ import androidx.viewbinding.ViewBinding;
 import com.google.firebase.auth.FirebaseUser;
 import com.pricepulse.R;
 import com.pricepulse.databinding.FragmentProfileBinding;
+import com.pricepulse.databinding.ProfileAddressEditorBinding;
+import com.pricepulse.databinding.ProfileAddressesBinding;
 import com.pricepulse.databinding.ProfileGuestBinding;
 import com.pricepulse.databinding.ProfileHelpBinding;
 import com.pricepulse.databinding.ProfileMainBinding;
 import com.pricepulse.databinding.ProfileOrdersBinding;
 import com.pricepulse.databinding.ProfileSettingsBinding;
 import com.pricepulse.databinding.ProfileWishlistBinding;
+import com.pricepulse.model.Address;
 import com.pricepulse.model.Order;
 import com.pricepulse.model.Product;
 import com.pricepulse.model.User;
+import com.pricepulse.ui.adapters.AddressAdapter;
 import com.pricepulse.ui.adapters.FaqAdapter;
 import com.pricepulse.ui.adapters.OrderAdapter;
 import com.pricepulse.ui.adapters.WishlistAdapter;
@@ -46,6 +50,7 @@ public class ProfileFragment extends Fragment {
     private ViewBinding currentSubBinding;
     private WishlistAdapter wishlistAdapter;
     private OrderAdapter orderAdapter;
+    private AddressAdapter addressAdapter;
 
     @Nullable
     @Override
@@ -93,6 +98,14 @@ public class ProfileFragment extends Fragment {
                 b.updateButton.setEnabled(!isLoading);
                 b.updateEmailButton.setEnabled(!isLoading);
                 b.updatePasswordButton.setEnabled(!isLoading);
+            } else if (currentSubBinding instanceof ProfileAddressesBinding) {
+                ProfileAddressesBinding b = (ProfileAddressesBinding) currentSubBinding;
+                b.addressesProgress.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+            } else if (currentSubBinding instanceof ProfileAddressEditorBinding) {
+                ProfileAddressEditorBinding b = (ProfileAddressEditorBinding) currentSubBinding;
+                b.saveAddressButton.setEnabled(!isLoading);
+                b.saveAddressProgress.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+                b.saveAddressButton.setText(isLoading ? "" : getString(R.string.address_save));
             }
         });
 
@@ -115,6 +128,17 @@ public class ProfileFragment extends Fragment {
                         && !Boolean.TRUE.equals(viewModel.getIsLoading().getValue());
                 b.emptyView.getRoot().setVisibility(empty ? View.VISIBLE : View.GONE);
                 b.ordersRecycler.setVisibility(empty ? View.GONE : View.VISIBLE);
+            }
+        });
+
+        viewModel.getAddresses().observe(getViewLifecycleOwner(), addresses -> {
+            if (currentSubBinding instanceof ProfileAddressesBinding && addressAdapter != null) {
+                ProfileAddressesBinding b = (ProfileAddressesBinding) currentSubBinding;
+                addressAdapter.submitList(addresses);
+                boolean loading = Boolean.TRUE.equals(viewModel.getIsLoading().getValue());
+                boolean empty = (addresses == null || addresses.isEmpty()) && !loading;
+                b.emptyView.getRoot().setVisibility(empty ? View.VISIBLE : View.GONE);
+                b.addressesRecycler.setVisibility(empty ? View.GONE : View.VISIBLE);
             }
         });
 
@@ -154,6 +178,25 @@ public class ProfileFragment extends Fragment {
                 case REAUTH_REQUIRED:
                     Toast.makeText(requireContext(), R.string.reauth_required, Toast.LENGTH_SHORT).show();
                     break;
+                case ADDRESS_SAVED:
+                    Toast.makeText(requireContext(), R.string.address_saved_toast, Toast.LENGTH_SHORT).show();
+                    viewModel.setTab(ProfileTabState.SAVED_ADDRESSES);
+                    break;
+                case ADDRESS_SAVE_FAILED:
+                    Toast.makeText(requireContext(), R.string.address_save_failed_toast, Toast.LENGTH_SHORT).show();
+                    break;
+                case ADDRESS_DELETED:
+                    Toast.makeText(requireContext(), R.string.address_deleted_toast, Toast.LENGTH_SHORT).show();
+                    break;
+                case ADDRESS_DELETE_FAILED:
+                    Toast.makeText(requireContext(), R.string.address_delete_failed_toast, Toast.LENGTH_SHORT).show();
+                    break;
+                case DEFAULT_ADDRESS_UPDATED:
+                    Toast.makeText(requireContext(), R.string.default_address_updated_toast, Toast.LENGTH_SHORT).show();
+                    break;
+                case DEFAULT_ADDRESS_UPDATE_FAILED:
+                    Toast.makeText(requireContext(), R.string.address_save_failed_toast, Toast.LENGTH_SHORT).show();
+                    break;
             }
         });
     }
@@ -185,6 +228,15 @@ public class ProfileFragment extends Fragment {
             case HELP_CENTER:
                 binding.toolbarTitle.setText(R.string.help_center);
                 break;
+            case SAVED_ADDRESSES:
+                binding.toolbarTitle.setText(R.string.saved_addresses);
+                break;
+            case ADDRESS_EDITOR:
+                binding.toolbarTitle.setText(
+                        viewModel.getEditingAddress().getValue() == null
+                                ? R.string.add_new_address
+                                : R.string.edit_address);
+                break;
         }
 
         if (tab != ProfileTabState.MAIN) {
@@ -197,14 +249,24 @@ public class ProfileFragment extends Fragment {
             }
             binding.toolbar.setNavigationIcon(backIcon);
             binding.toolbar.setNavigationContentDescription(R.string.back);
+            // απο το editor πρεπει να γυρνας στη λιστα, οχι στο main
+            binding.toolbar.setNavigationOnClickListener(v -> {
+                if (tab == ProfileTabState.ADDRESS_EDITOR) {
+                    viewModel.setTab(ProfileTabState.SAVED_ADDRESSES);
+                } else {
+                    viewModel.setTab(ProfileTabState.MAIN);
+                }
+            });
         } else {
             binding.toolbar.setNavigationIcon(null);
+            binding.toolbar.setNavigationOnClickListener(null);
         }
 
         binding.profileContentHost.removeAllViews();
         currentSubBinding = null;
         wishlistAdapter = null;
         orderAdapter = null;
+        addressAdapter = null;
 
         switch (tab) {
             case MAIN:
@@ -221,6 +283,12 @@ public class ProfileFragment extends Fragment {
                 break;
             case HELP_CENTER:
                 showHelp();
+                break;
+            case SAVED_ADDRESSES:
+                showAddresses();
+                break;
+            case ADDRESS_EDITOR:
+                showAddressEditor();
                 break;
         }
     }
@@ -261,6 +329,10 @@ public class ProfileFragment extends Fragment {
         b.rowOrders.optionIcon.setImageResource(R.drawable.ic_list);
         b.rowOrders.optionTitle.setText(R.string.order_history);
         b.rowOrders.getRoot().setOnClickListener(v -> viewModel.setTab(ProfileTabState.ORDERS));
+
+        b.rowAddresses.optionIcon.setImageResource(R.drawable.ic_location);
+        b.rowAddresses.optionTitle.setText(R.string.saved_addresses);
+        b.rowAddresses.getRoot().setOnClickListener(v -> viewModel.setTab(ProfileTabState.SAVED_ADDRESSES));
 
         b.rowSettings.optionIcon.setImageResource(R.drawable.ic_settings);
         b.rowSettings.optionTitle.setText(R.string.account_settings);
@@ -468,6 +540,114 @@ public class ProfileFragment extends Fragment {
         chevron.animate().rotation(expanding ? 90f : 0f).setDuration(200).start();
     }
 
+    private void showAddresses() {
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        ProfileAddressesBinding b = ProfileAddressesBinding.inflate(inflater, binding.profileContentHost, false);
+        binding.profileContentHost.addView(b.getRoot());
+        currentSubBinding = b;
+
+        addressAdapter = new AddressAdapter(new AddressAdapter.OnAddressAction() {
+            @Override
+            public void onEdit(Address address) {
+                viewModel.openAddressEditor(address);
+            }
+
+            @Override
+            public void onDelete(Address address) {
+                new android.app.AlertDialog.Builder(requireContext())
+                        .setTitle(R.string.address_delete_confirm_title)
+                        .setMessage(R.string.address_delete_confirm_message)
+                        .setPositiveButton(android.R.string.ok, (d, w) -> viewModel.deleteAddress(address))
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show();
+            }
+
+            @Override
+            public void onSetDefault(Address address) {
+                viewModel.setDefaultAddress(address);
+            }
+        });
+        b.addressesRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
+        b.addressesRecycler.setAdapter(addressAdapter);
+
+        b.emptyView.emptyIcon.setImageResource(R.drawable.ic_location);
+        b.emptyView.emptyTitle.setText(R.string.empty_addresses_title);
+        b.emptyView.emptySubtitle.setText(R.string.empty_addresses_subtitle);
+
+        b.addAddressButton.setOnClickListener(v -> viewModel.openAddressEditor(null));
+
+        List<Address> current = viewModel.getAddresses().getValue();
+        addressAdapter.submitList(current);
+        boolean loading = Boolean.TRUE.equals(viewModel.getIsLoading().getValue());
+        b.addressesProgress.setVisibility(loading ? View.VISIBLE : View.GONE);
+        boolean empty = (current == null || current.isEmpty()) && !loading;
+        b.emptyView.getRoot().setVisibility(empty ? View.VISIBLE : View.GONE);
+        b.addressesRecycler.setVisibility(empty ? View.GONE : View.VISIBLE);
+    }
+
+    private void showAddressEditor() {
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        ProfileAddressEditorBinding b = ProfileAddressEditorBinding.inflate(inflater, binding.profileContentHost, false);
+        binding.profileContentHost.addView(b.getRoot());
+        currentSubBinding = b;
+
+        Address editing = viewModel.getEditingAddress().getValue();
+
+        String[] labels = new String[] {
+                getString(R.string.address_label_home),
+                getString(R.string.address_label_work),
+                getString(R.string.address_label_other)
+        };
+        android.widget.ArrayAdapter<String> labelAdapter = new android.widget.ArrayAdapter<>(
+                requireContext(), android.R.layout.simple_list_item_1, labels);
+        b.addressLabelInput.setAdapter(labelAdapter);
+
+        if (editing != null) {
+            b.addressLabelInput.setText(editing.getLabel(), false);
+            b.addressFullNameInput.setText(editing.getFullName());
+            b.addressPhoneInput.setText(editing.getPhone());
+            b.addressLineInput.setText(editing.getAddressLine());
+            b.addressCityInput.setText(editing.getCity());
+            b.addressPostalCodeInput.setText(editing.getPostalCode());
+            b.addressDefaultSwitch.setChecked(editing.isDefaultAddress());
+        } else {
+            b.addressLabelInput.setText(labels[0], false);
+        }
+
+        boolean initialLoading = Boolean.TRUE.equals(viewModel.getIsLoading().getValue());
+        b.saveAddressButton.setEnabled(!initialLoading);
+        b.saveAddressProgress.setVisibility(initialLoading ? View.VISIBLE : View.GONE);
+        b.saveAddressButton.setText(initialLoading ? "" : getString(R.string.address_save));
+
+        b.saveAddressButton.setOnClickListener(v -> {
+            String label = b.addressLabelInput.getText() != null
+                    ? b.addressLabelInput.getText().toString().trim() : "";
+            String fullName = textOf(b.addressFullNameInput);
+            String phone = textOf(b.addressPhoneInput);
+            String addressLine = textOf(b.addressLineInput);
+            String city = textOf(b.addressCityInput);
+            String postalCode = textOf(b.addressPostalCodeInput);
+
+            if (fullName.isEmpty() || phone.isEmpty() || addressLine.isEmpty()
+                    || city.isEmpty() || postalCode.isEmpty()) {
+                Toast.makeText(requireContext(), R.string.all_required_fields_missing,
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (label.isEmpty()) label = Address.LABEL_HOME;
+
+            Address toSave = editing != null
+                    ? new Address(editing.getId(), editing.getUserId(), label, fullName, phone,
+                            addressLine, city, postalCode, b.addressDefaultSwitch.isChecked(),
+                            editing.getTimestamp())
+                    : new Address("", "", label, fullName, phone,
+                            addressLine, city, postalCode, b.addressDefaultSwitch.isChecked(),
+                            System.currentTimeMillis());
+
+            viewModel.saveAddress(toSave);
+        });
+    }
+
     private void showHelp() {
         LayoutInflater inflater = LayoutInflater.from(requireContext());
         ProfileHelpBinding b = ProfileHelpBinding.inflate(inflater, binding.profileContentHost, false);
@@ -495,6 +675,7 @@ public class ProfileFragment extends Fragment {
         currentSubBinding = null;
         wishlistAdapter = null;
         orderAdapter = null;
+        addressAdapter = null;
         binding = null;
     }
 }
