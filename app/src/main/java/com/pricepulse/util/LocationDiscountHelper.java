@@ -26,12 +26,7 @@ public final class LocationDiscountHelper {
     public static final double MAX_ADDRESS_TO_SHOP_DISTANCE_KM = 30.0;
     public static final double DELIVERY_DISCOUNT_RATE = 0.30;
 
-    /*
-     * Demo shop coordinates.
-     * In a production version, these should come from the selected shop/store entity in Firestore.
-     *
-     * Current value: Thessaloniki city centre approximation.
-     */
+    // demo συντεταγμενες (κεντρο Θεσσαλονικης) — κανονικα πρεπει να ερχονται απο το επιλεγμενο shop στο Firestore
     private static final double SHOP_LATITUDE = 40.6401;
     private static final double SHOP_LONGITUDE = 22.9444;
 

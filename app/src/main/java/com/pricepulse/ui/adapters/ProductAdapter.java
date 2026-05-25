@@ -1,6 +1,7 @@
 package com.pricepulse.ui.adapters;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
@@ -91,9 +92,9 @@ public class ProductAdapter extends ListAdapter<ProductListItem, RecyclerView.Vi
             String shopName = p.getShopName();
             if (shopName != null && !shopName.isEmpty()) {
                 b.shopCount.setText(b.getRoot().getContext().getString(R.string.sold_by_format, shopName));
-                b.shopCount.setVisibility(android.view.View.VISIBLE);
+                b.shopCount.setVisibility(View.VISIBLE);
             } else {
-                b.shopCount.setVisibility(android.view.View.GONE);
+                b.shopCount.setVisibility(View.GONE);
             }
             int gold = ContextCompat.getColor(b.getRoot().getContext(), R.color.star_gold);
             int gray = ContextCompat.getColor(b.getRoot().getContext(), R.color.skroutz_gray);

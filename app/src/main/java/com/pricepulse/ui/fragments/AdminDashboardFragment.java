@@ -5,10 +5,14 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -22,14 +26,12 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.viewbinding.ViewBinding;
 
-import com.pricepulse.util.ImageLoader;
 import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.pricepulse.R;
 import com.pricepulse.admin.AdminSession;
-import com.pricepulse.model.Order;
-import com.pricepulse.model.User;
 import com.pricepulse.databinding.AdminAddProductBinding;
 import com.pricepulse.databinding.AdminManageAdminsBinding;
 import com.pricepulse.databinding.AdminOrdersBinding;
@@ -38,16 +40,20 @@ import com.pricepulse.databinding.AdminPlatformOverviewBinding;
 import com.pricepulse.databinding.AdminShopDetailsBinding;
 import com.pricepulse.databinding.AdminShopsBinding;
 import com.pricepulse.databinding.FragmentAdminDashboardBinding;
-import com.pricepulse.model.Shop;
-import com.pricepulse.ui.adapters.ShopAdapter;
+import com.pricepulse.model.Order;
 import com.pricepulse.model.Product;
+import com.pricepulse.model.Shop;
+import com.pricepulse.model.User;
 import com.pricepulse.ui.adapters.AdminOrderAdapter;
 import com.pricepulse.ui.adapters.AdminUserAdapter;
+import com.pricepulse.ui.adapters.ShopAdapter;
+import com.pricepulse.util.ImageLoader;
 import com.pricepulse.viewmodel.AdminViewModel;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 public class AdminDashboardFragment extends Fragment {
 
@@ -361,9 +367,9 @@ public class AdminDashboardFragment extends Fragment {
 
             b.productsCountText.setText(String.valueOf(overview.productCount));
             b.ordersCountText.setText(String.valueOf(overview.pendingOrderCount));
-            b.revenueText.setText(String.format(java.util.Locale.getDefault(),
+            b.revenueText.setText(String.format(Locale.getDefault(),
                     "€%.2f", overview.monthlyRevenue));
-            b.shopRatingText.setText(String.format(java.util.Locale.getDefault(),
+            b.shopRatingText.setText(String.format(Locale.getDefault(),
                     "%.1f", overview.rating));
         });
 
@@ -384,7 +390,7 @@ public class AdminDashboardFragment extends Fragment {
             b.platformShopsCountText.setText(String.valueOf(overview.shopCount));
             b.platformProductsCountText.setText(String.valueOf(overview.productCount));
             b.platformPendingOrdersCountText.setText(String.valueOf(overview.pendingOrderCount));
-            b.platformRevenueText.setText(String.format(java.util.Locale.getDefault(),
+            b.platformRevenueText.setText(String.format(Locale.getDefault(),
                     "€%.2f", overview.monthlyRevenue));
         });
 
@@ -455,7 +461,7 @@ public class AdminDashboardFragment extends Fragment {
         setIfBlank(b.deliveryOptionsInput, shop.getDeliveryOptions());
     }
 
-    private static void setIfBlank(android.widget.EditText input, String value) {
+    private static void setIfBlank(EditText input, String value) {
         if (value == null) return;
         String current = input.getText() != null ? input.getText().toString() : "";
         if (current.isEmpty()) {
@@ -463,8 +469,7 @@ public class AdminDashboardFragment extends Fragment {
         }
     }
 
-    private static void setIfBlank(com.google.android.material.textfield.MaterialAutoCompleteTextView input,
-                                   String value) {
+    private static void setIfBlank(MaterialAutoCompleteTextView input, String value) {
         if (value == null) return;
         String current = input.getText() != null ? input.getText().toString() : "";
         if (current.isEmpty()) {
@@ -553,10 +558,10 @@ public class AdminDashboardFragment extends Fragment {
 
         b.productPickImageButton.setOnClickListener(v -> imagePicker.launch("image/*"));
 
-        b.productImageUrlInput.addTextChangedListener(new android.text.TextWatcher() {
+        b.productImageUrlInput.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override public void afterTextChanged(android.text.Editable s) {
+            @Override public void afterTextChanged(Editable s) {
                 String url = s.toString().trim();
                 if (!url.isEmpty()) {
                     pickedImageUri = null;
@@ -707,7 +712,6 @@ public class AdminDashboardFragment extends Fragment {
         b.shopsRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         b.shopsRecycler.setAdapter(shopAdapter);
 
-        // category dropdown
         ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(requireContext(),
                 android.R.layout.simple_list_item_1, CATEGORIES);
         b.editorShopCategoryInput.setAdapter(categoryAdapter);
@@ -856,7 +860,7 @@ public class AdminDashboardFragment extends Fragment {
         setChipSelected(b.filterCompleted, AdminOrderAdapter.STATUS_COMPLETED.equals(selectedOrderFilter));
     }
 
-    private void setChipSelected(android.widget.TextView chip, boolean selected) {
+    private void setChipSelected(TextView chip, boolean selected) {
         chip.setTextColor(ContextCompat.getColor(
                 requireContext(),
                 selected ? R.color.white : R.color.skroutz_text_primary
@@ -867,7 +871,7 @@ public class AdminDashboardFragment extends Fragment {
         );
     }
 
-    private static String text(android.widget.EditText input) {
+    private static String text(EditText input) {
         return input.getText() != null ? input.getText().toString().trim() : "";
     }
 

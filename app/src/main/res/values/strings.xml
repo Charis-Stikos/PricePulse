@@ -122,7 +122,6 @@
     <string name="no_admins">No admins yet</string>
     <string name="confirm_revoke_admin">Revoke admin from %1$s?</string>
 
-    //this new strings
     <string name="admin_overview">Overview</string>
     <string name="admin_shop_details">Shop Details</string>
     <string name="admin_privilages">Manage Admin</string>

@@ -1,11 +1,14 @@
 package com.pricepulse.ui.fragments;
 
+import android.app.AlertDialog;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -17,8 +20,11 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.viewbinding.ViewBinding;
 
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseUser;
 import com.pricepulse.R;
+import com.pricepulse.admin.AdminSession;
+import com.pricepulse.auth.AuthManager;
 import com.pricepulse.databinding.FragmentProfileBinding;
 import com.pricepulse.databinding.ProfileAddressEditorBinding;
 import com.pricepulse.databinding.ProfileAddressesBinding;
@@ -347,7 +353,7 @@ public class ProfileFragment extends Fragment {
         b.rowAdmin.getRoot().setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigate(R.id.action_profile_to_admin));
 
-        com.pricepulse.admin.AdminSession.getInstance().canAccessDashboard()
+        AdminSession.getInstance().canAccessDashboard()
                 .observe(getViewLifecycleOwner(), canAccess -> {
                     boolean show = Boolean.TRUE.equals(canAccess);
                     b.rowAdminDivider.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -404,7 +410,7 @@ public class ProfileFragment extends Fragment {
             isProcessing[0] = true;
             setProcessingRef[0].run();
             b.errorText.setVisibility(View.GONE);
-            com.pricepulse.auth.AuthManager.AuthResultCallback callback = (success, error) -> {
+            AuthManager.AuthResultCallback callback = (success, error) -> {
                 if (binding == null) return;
                 isProcessing[0] = false;
                 setProcessingRef[0].run();
@@ -530,11 +536,11 @@ public class ProfileFragment extends Fragment {
         });
     }
 
-    private static String textOf(com.google.android.material.textfield.TextInputEditText input) {
+    private static String textOf(TextInputEditText input) {
         return input.getText() != null ? input.getText().toString().trim() : "";
     }
 
-    private void toggleSection(View body, android.widget.ImageView chevron) {
+    private void toggleSection(View body, ImageView chevron) {
         boolean expanding = body.getVisibility() != View.VISIBLE;
         body.setVisibility(expanding ? View.VISIBLE : View.GONE);
         chevron.animate().rotation(expanding ? 90f : 0f).setDuration(200).start();
@@ -554,7 +560,7 @@ public class ProfileFragment extends Fragment {
 
             @Override
             public void onDelete(Address address) {
-                new android.app.AlertDialog.Builder(requireContext())
+                new AlertDialog.Builder(requireContext())
                         .setTitle(R.string.address_delete_confirm_title)
                         .setMessage(R.string.address_delete_confirm_message)
                         .setPositiveButton(android.R.string.ok, (d, w) -> viewModel.deleteAddress(address))
@@ -598,7 +604,7 @@ public class ProfileFragment extends Fragment {
                 getString(R.string.address_label_work),
                 getString(R.string.address_label_other)
         };
-        android.widget.ArrayAdapter<String> labelAdapter = new android.widget.ArrayAdapter<>(
+        ArrayAdapter<String> labelAdapter = new ArrayAdapter<>(
                 requireContext(), android.R.layout.simple_list_item_1, labels);
         b.addressLabelInput.setAdapter(labelAdapter);
 

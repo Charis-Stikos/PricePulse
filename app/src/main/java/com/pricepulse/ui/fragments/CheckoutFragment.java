@@ -1,11 +1,21 @@
 package com.pricepulse.ui.fragments;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.biometric.BiometricManager;
@@ -16,20 +26,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
-
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-
-import com.pricepulse.util.LocationDiscountHelper;
-
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.ListenerRegistration;
@@ -38,14 +34,12 @@ import com.pricepulse.databinding.FragmentCheckoutBinding;
 import com.pricepulse.model.Address;
 import com.pricepulse.repository.FirebaseRepository;
 import com.pricepulse.ui.adapters.CheckoutSummaryAdapter;
+import com.pricepulse.util.LocationDiscountHelper;
 import com.pricepulse.viewmodel.CartUiState;
 import com.pricepulse.viewmodel.CartViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
-
-
-
 import java.util.Locale;
 
 public class CheckoutFragment extends Fragment {
@@ -237,7 +231,7 @@ public class CheckoutFragment extends Fragment {
 
                     @Override
                     public void onAuthenticationFailed() {
-                        // user gets in-prompt feedback και μπορει να ξαναπροσπαθησει
+                        // ο χρηστης βλεπει feedback μεσα στο prompt και μπορει να ξαναπροσπαθησει
                     }
                 }
         );
@@ -481,7 +475,7 @@ public class CheckoutFragment extends Fragment {
         }
     }
 
-    private static String text(android.widget.EditText input) {
+    private static String text(EditText input) {
         return input.getText() != null
                 ? input.getText().toString().trim()
                 : "";

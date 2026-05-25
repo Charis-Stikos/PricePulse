@@ -14,9 +14,8 @@ import com.pricepulse.model.Shop;
 import com.pricepulse.model.User;
 import com.pricepulse.repository.FirebaseRepository;
 
-import java.util.Calendar;
-
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class AdminViewModel extends ViewModel {
@@ -51,7 +50,6 @@ public class AdminViewModel extends ViewModel {
     private ListenerRegistration adminsRegistration;
     private ListenerRegistration shopOwnersRegistration;
 
-    // overview state
     public static final class ShopOverview {
         public final Shop shop;
         public final int productCount;
@@ -94,7 +92,7 @@ public class AdminViewModel extends ViewModel {
     private ListenerRegistration allProductsRegistration;
     private ListenerRegistration allOrdersRegistration;
 
-    // last seen values για να συνθεσω τα ShopOverview / PlatformOverview snapshots
+    // κραταμε τις τελευταιες τιμες για να συνθετουμε τα ShopOverview / PlatformOverview snapshots
     private Shop lastOwnedShop;
     private int lastOwnedProductCount;
     private int lastOwnedPendingCount;
@@ -354,7 +352,7 @@ public class AdminViewModel extends ViewModel {
                 lastShopCount, lastAllProductCount, lastAllPendingCount, lastAllMonthlyRevenue));
     }
 
-    private static int countPending(java.util.List<Order> orders) {
+    private static int countPending(List<Order> orders) {
         if (orders == null) return 0;
         int n = 0;
         for (Order o : orders) {
@@ -363,7 +361,7 @@ public class AdminViewModel extends ViewModel {
         return n;
     }
 
-    private static double sumMonthlyRevenue(java.util.List<Order> orders) {
+    private static double sumMonthlyRevenue(List<Order> orders) {
         if (orders == null) return 0.0;
         Calendar now = Calendar.getInstance();
         int year = now.get(Calendar.YEAR);

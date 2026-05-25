@@ -1,5 +1,6 @@
 package com.pricepulse.ui.fragments;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,6 +10,7 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,7 +20,6 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.pricepulse.util.ImageLoader;
 import com.google.firebase.auth.FirebaseUser;
 import com.pricepulse.R;
 import com.pricepulse.cart.CartManager;
@@ -28,10 +29,9 @@ import com.pricepulse.databinding.ItemReviewBinding;
 import com.pricepulse.model.Product;
 import com.pricepulse.model.Review;
 import com.pricepulse.model.Shop;
+import com.pricepulse.util.ImageLoader;
 import com.pricepulse.viewmodel.ProductDetailUiState;
 import com.pricepulse.viewmodel.ProductDetailViewModel;
-
-import android.widget.Toast;
 
 import java.util.Locale;
 
@@ -128,7 +128,7 @@ public class ProductDetailFragment extends Fragment {
         }
         paint.run();
 
-        new android.app.AlertDialog.Builder(requireContext())
+        new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.write_review)
                 .setView(b.getRoot())
                 .setPositiveButton(R.string.submit_review, (d, w) -> {

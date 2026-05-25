@@ -2,6 +2,7 @@ package com.pricepulse.ui.adapters;
 
 import android.graphics.PorterDuff;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
 
@@ -85,7 +86,7 @@ public class AdminOrderAdapter extends ListAdapter<Order, AdminOrderAdapter.VH> 
             b.adminOrderItems.setText(items.toString());
 
             boolean expanded = order.getId() != null && order.getId().equals(expandedOrderId);
-            b.adminOrderDetailsContainer.setVisibility(expanded ? android.view.View.VISIBLE : android.view.View.GONE);
+            b.adminOrderDetailsContainer.setVisibility(expanded ? View.VISIBLE : View.GONE);
             b.adminOrderViewBtn.setText(expanded
                     ? b.getRoot().getContext().getString(R.string.hide_order)
                     : b.getRoot().getContext().getString(R.string.view_order));
