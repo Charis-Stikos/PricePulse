@@ -10,9 +10,11 @@ import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.pricepulse.cart.CartManager;
 import com.pricepulse.model.CartItem;
 import com.pricepulse.model.Order;
+import com.pricepulse.model.Shop;
 import com.pricepulse.repository.FirebaseRepository;
 
 import java.util.ArrayList;
@@ -26,7 +28,10 @@ public class CartViewModel extends ViewModel {
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     private final MutableLiveData<CartUiState> uiState = new MutableLiveData<>(new CartUiState.Idle());
+    private final MutableLiveData<Shop> currentShop = new MutableLiveData<>();
     private final MediatorLiveData<Double> totalAmount = new MediatorLiveData<>(0.0);
+    private ListenerRegistration shopRegistration;
+    private String listenedShopId;
 
     public CartViewModel() {
         totalAmount.addSource(cartManager.getItems(), items -> {
@@ -35,6 +40,7 @@ public class CartViewModel extends ViewModel {
                 for (CartItem item : items) total += item.getProductPrice() * item.getQuantity();
             }
             totalAmount.setValue(total);
+            attachShopIfNeeded(resolveShopId(items));
         });
     }
 
@@ -46,8 +52,39 @@ public class CartViewModel extends ViewModel {
         return uiState;
     }
 
+    public LiveData<Shop> getCurrentShop() {
+        return currentShop;
+    }
+
     public LiveData<Double> getTotalAmount() {
         return totalAmount;
+    }
+
+    private String resolveShopId(List<CartItem> items) {
+        if (items == null || items.isEmpty()) return "";
+        return items.get(0).getShopId();
+    }
+
+    private void attachShopIfNeeded(String shopId) {
+        if (shopId == null || shopId.isEmpty()) {
+            detachShop();
+            currentShop.setValue(null);
+            return;
+        }
+
+        if (shopId.equals(listenedShopId) && shopRegistration != null) return;
+
+        detachShop();
+        listenedShopId = shopId;
+        shopRegistration = repository.listenToShop(shopId, currentShop::setValue);
+    }
+
+    private void detachShop() {
+        if (shopRegistration != null) {
+            shopRegistration.remove();
+            shopRegistration = null;
+        }
+        listenedShopId = null;
     }
 
     public void checkout() {
@@ -138,5 +175,11 @@ public class CartViewModel extends ViewModel {
 
     public void removeItem(String productId) {
         cartManager.removeItemCompletely(productId);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        detachShop();
     }
 }

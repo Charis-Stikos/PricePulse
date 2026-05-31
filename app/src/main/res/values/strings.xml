@@ -202,6 +202,7 @@
     <string name="location_discount_checking">Checking your delivery address location...</string>
     <string name="location_service_unavailable">Location service is unavailable. Please try again.</string>
     <string name="location_service_disabled">Location service is disabled. Please enable location services and try again.</string>
+    <string name="shop_location_unavailable">Shop location is not available yet. Please try again in a moment.</string>
     <string name="location_discount_approved">Location discount approved. Address verified within %.1f km from you and %.1f km from the shop.</string>
 
     <string name="saved_addresses">Saved Addresses</string>

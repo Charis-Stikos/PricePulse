@@ -74,7 +74,6 @@ public class FirestoreSeeder {
     }
 
     private Shop buildDefaultShop(int productCount) {
-        // demo shop στη Θεσσαλονικη — οι ιδιες συντεταγμενες με το LocationDiscountHelper
         Shop shop = new Shop();
         shop.setId(DEFAULT_SHOP_ID);
         shop.setOwnerId("");
@@ -83,14 +82,14 @@ public class FirestoreSeeder {
         shop.setMainCategory("Electronics");
         shop.setBusinessEmail("contact@pricepulse.app");
         shop.setBusinessPhone("+30 210 000 0000");
-        shop.setAddress("12 Market Street, Thessaloniki");
+        shop.setAddress("Ermou 12, Athens");
         shop.setOpeningHours("Monday - Friday, 09:00 - 18:00");
         shop.setDeliveryOptions("Courier delivery and in-store pickup available");
         shop.setRating(4.8);
         shop.setProductCount(productCount);
         shop.setActive(true);
-        shop.setLatitude(40.6401);
-        shop.setLongitude(22.9444);
+        shop.setLatitude(37.9760);
+        shop.setLongitude(23.7307);
         return shop;
     }
 

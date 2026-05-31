@@ -32,6 +32,7 @@ import com.google.firebase.firestore.ListenerRegistration;
 import com.pricepulse.R;
 import com.pricepulse.databinding.FragmentCheckoutBinding;
 import com.pricepulse.model.Address;
+import com.pricepulse.model.Shop;
 import com.pricepulse.repository.FirebaseRepository;
 import com.pricepulse.ui.adapters.CheckoutSummaryAdapter;
 import com.pricepulse.util.LocationDiscountHelper;
@@ -63,6 +64,7 @@ public class CheckoutFragment extends Fragment {
     private double currentFinalTotalAmount = 0.0;
     private boolean locationDiscountApplied = false;
     private double currentSubtotal = 0.0;
+    private Shop currentShop;
 
     @Nullable
     @Override
@@ -141,6 +143,15 @@ public class CheckoutFragment extends Fragment {
         viewModel.getTotalAmount().observe(getViewLifecycleOwner(), total -> {
             currentSubtotal = total != null ? total : 0.0;
             updateCheckoutTotals();
+        });
+
+        viewModel.getCurrentShop().observe(getViewLifecycleOwner(), shop -> {
+            currentShop = shop;
+            resetLocationDiscount();
+            binding.locationDiscountStatusText.setText(R.string.location_discount_not_checked);
+            binding.locationDiscountStatusText.setTextColor(
+                    requireContext().getColor(R.color.skroutz_text_secondary)
+            );
         });
 
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::renderState);
@@ -314,6 +325,11 @@ public class CheckoutFragment extends Fragment {
     }
 
     private void checkDiscountWithLocation(Location userLocation) {
+        if (!hasValidShopLocation()) {
+            showLocationDiscountError(getString(R.string.shop_location_unavailable));
+            return;
+        }
+
         String shippingAddress = buildShippingAddress();
 
         LocationDiscountHelper.checkDiscountEligibility(
@@ -321,6 +337,8 @@ public class CheckoutFragment extends Fragment {
                 shippingAddress,
                 userLocation.getLatitude(),
                 userLocation.getLongitude(),
+                currentShop.getLatitude(),
+                currentShop.getLongitude(),
                 result -> {
                     if (binding == null) return;
 
@@ -342,6 +360,11 @@ public class CheckoutFragment extends Fragment {
                     }
                 }
         );
+    }
+
+    private boolean hasValidShopLocation() {
+        return currentShop != null
+                && (currentShop.getLatitude() != 0.0 || currentShop.getLongitude() != 0.0);
     }
 
     private String buildShippingAddress() {

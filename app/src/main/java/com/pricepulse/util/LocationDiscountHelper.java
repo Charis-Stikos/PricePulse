@@ -22,13 +22,13 @@ public final class LocationDiscountHelper {
         void onResult(Result result);
     }
 
+    public interface CoordinatesCallback {
+        void onResult(Coordinates coordinates);
+    }
+
     public static final double MAX_USER_TO_ADDRESS_DISTANCE_KM = 10.0;
     public static final double MAX_ADDRESS_TO_SHOP_DISTANCE_KM = 30.0;
     public static final double DELIVERY_DISCOUNT_RATE = 0.30;
-
-    // demo συντεταγμενες (κεντρο Θεσσαλονικης) — κανονικα πρεπει να ερχονται απο το επιλεγμενο shop στο Firestore
-    private static final double SHOP_LATITUDE = 40.6401;
-    private static final double SHOP_LONGITUDE = 22.9444;
 
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
@@ -38,6 +38,8 @@ public final class LocationDiscountHelper {
             String shippingAddressText,
             double userLatitude,
             double userLongitude,
+            double shopLatitude,
+            double shopLongitude,
             DiscountCallback callback
     ) {
         Context appContext = context.getApplicationContext();
@@ -47,10 +49,29 @@ public final class LocationDiscountHelper {
                     appContext,
                     shippingAddressText,
                     userLatitude,
-                    userLongitude
+                    userLongitude,
+                    shopLatitude,
+                    shopLongitude
             );
 
             MAIN_HANDLER.post(() -> callback.onResult(result));
+        });
+    }
+
+    public static void geocodeAddress(
+            Context context,
+            String addressText,
+            CoordinatesCallback callback
+    ) {
+        Context appContext = context.getApplicationContext();
+
+        EXECUTOR.execute(() -> {
+            Address address = geocodeAddressInternal(appContext, addressText);
+            Coordinates coordinates = address != null
+                    ? new Coordinates(address.getLatitude(), address.getLongitude())
+                    : null;
+
+            MAIN_HANDLER.post(() -> callback.onResult(coordinates));
         });
     }
 
@@ -58,13 +79,15 @@ public final class LocationDiscountHelper {
             Context context,
             String shippingAddressText,
             double userLatitude,
-            double userLongitude
+            double userLongitude,
+            double shopLatitude,
+            double shopLongitude
     ) {
         if (shippingAddressText == null || shippingAddressText.trim().isEmpty()) {
             return Result.error("Shipping address is empty.");
         }
 
-        Address shippingAddress = geocodeAddress(context, shippingAddressText);
+        Address shippingAddress = geocodeAddressInternal(context, shippingAddressText);
 
         if (shippingAddress == null) {
             return Result.error("Could not find the shipping address.");
@@ -95,8 +118,8 @@ public final class LocationDiscountHelper {
         double addressToShopDistanceKm = distanceKm(
                 shippingLatitude,
                 shippingLongitude,
-                SHOP_LATITUDE,
-                SHOP_LONGITUDE
+                shopLatitude,
+                shopLongitude
         );
 
         boolean eligibleForDiscount = addressToShopDistanceKm <= MAX_ADDRESS_TO_SHOP_DISTANCE_KM;
@@ -120,7 +143,7 @@ public final class LocationDiscountHelper {
     }
 
     @SuppressWarnings("deprecation")
-    private static Address geocodeAddress(Context context, String addressText) {
+    private static Address geocodeAddressInternal(Context context, String addressText) {
         Geocoder geocoder = new Geocoder(context, Locale.getDefault());
 
         try {
@@ -161,6 +184,24 @@ public final class LocationDiscountHelper {
 
     public static double calculateFinalDeliveryFee(double deliveryFee) {
         return deliveryFee - calculateDiscountAmount(deliveryFee);
+    }
+
+    public static final class Coordinates {
+        private final double latitude;
+        private final double longitude;
+
+        private Coordinates(double latitude, double longitude) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+        }
+
+        public double getLatitude() {
+            return latitude;
+        }
+
+        public double getLongitude() {
+            return longitude;
+        }
     }
 
     public static final class Result {

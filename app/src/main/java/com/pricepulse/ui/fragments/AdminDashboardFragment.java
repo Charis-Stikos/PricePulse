@@ -48,6 +48,7 @@ import com.pricepulse.ui.adapters.AdminOrderAdapter;
 import com.pricepulse.ui.adapters.AdminUserAdapter;
 import com.pricepulse.ui.adapters.ShopAdapter;
 import com.pricepulse.util.ImageLoader;
+import com.pricepulse.util.LocationDiscountHelper;
 import com.pricepulse.viewmodel.AdminViewModel;
 
 import java.util.ArrayList;
@@ -494,7 +495,7 @@ public class AdminDashboardFragment extends Fragment {
                     Toast.LENGTH_SHORT).show();
             return;
         }
-        viewModel.saveShop(shop);
+        saveShopWithResolvedLocation(shop);
     }
 
     private void showOrders() {
@@ -771,7 +772,26 @@ public class AdminDashboardFragment extends Fragment {
         if (shopBeingEdited == null) {
             shop.setCreatedAt(System.currentTimeMillis());
         }
-        viewModel.saveShop(shop);
+        saveShopWithResolvedLocation(shop);
+    }
+
+    private void saveShopWithResolvedLocation(Shop shop) {
+        String geocodedAddress = buildGreekAddress(shop.getAddress());
+        LocationDiscountHelper.geocodeAddress(requireContext(), geocodedAddress, coordinates -> {
+            if (binding == null) return;
+
+            if (coordinates != null) {
+                shop.setLatitude(coordinates.getLatitude());
+                shop.setLongitude(coordinates.getLongitude());
+            }
+
+            viewModel.saveShop(shop);
+        });
+    }
+
+    private String buildGreekAddress(String address) {
+        String cleanAddress = address != null ? address.trim() : "";
+        return cleanAddress.isEmpty() ? "Greece" : cleanAddress + ", Greece";
     }
 
     private Shop copyOf(Shop other) {

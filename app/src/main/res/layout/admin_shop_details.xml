@@ -62,7 +62,6 @@
                             android:id="@+id/shopPreviewName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/sample_shop_name"
                             android:textSize="18sp"
                             android:textStyle="bold"
                             android:textColor="@color/skroutz_text_primary" />
@@ -126,8 +125,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="textCapWords"
-                            android:maxLines="1"
-                            android:text="@string/sample_shop_name" />
+                            android:maxLines="1" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -144,8 +142,7 @@
                             android:layout_height="110dp"
                             android:gravity="top|start"
                             android:inputType="textMultiLine|textCapSentences"
-                            android:maxLines="5"
-                            android:text="@string/sample_shop_description" />
+                            android:maxLines="5" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -160,8 +157,7 @@
                             android:id="@+id/shopCategoryDropdown"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="none"
-                            android:text="@string/category_electronics" />
+                            android:inputType="none" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -203,8 +199,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="textEmailAddress"
-                            android:maxLines="1"
-                            android:text="@string/sample_shop_email" />
+                            android:maxLines="1" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -220,8 +215,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="phone"
-                            android:maxLines="1"
-                            android:text="@string/sample_shop_phone" />
+                            android:maxLines="1" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -237,8 +231,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="textPostalAddress|textCapSentences"
-                            android:maxLines="2"
-                            android:text="@string/sample_shop_address" />
+                            android:maxLines="2" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -280,8 +273,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="textCapSentences"
-                            android:maxLines="1"
-                            android:text="@string/sample_opening_hours" />
+                            android:maxLines="1" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -297,8 +289,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="textCapSentences"
-                            android:maxLines="2"
-                            android:text="@string/sample_delivery_options" />
+                            android:maxLines="2" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
