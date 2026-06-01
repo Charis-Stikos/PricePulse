@@ -1,5 +1,22 @@
-# Project exclude paths
+# Built output
 /.gradle/
-/app/build/
-/app/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/
 /build/
+/app/build/
+
+# IntelliJ / Android Studio IDE files
+/.idea/
+*.iml
+
+# Local machine config (contains SDK path, never share)
+local.properties
+
+# Gradle daemon JVM settings (machine-specific)
+gradle/gradle-daemon-jvm.properties
+
+# Keystore files - NEVER commit signing keys
+*.jks
+*.keystore
+
+# OS files
+.DS_Store
+Thumbs.db
