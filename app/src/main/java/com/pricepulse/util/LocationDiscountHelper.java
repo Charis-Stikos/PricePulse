@@ -31,7 +31,11 @@ public final class LocationDiscountHelper {
     public static final double DELIVERY_DISCOUNT_RATE = 0.30;
 
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
-    private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
+
+    // Lazy αρχικοποίηση ώστε η κλάση να φορτώνεται χωρίς Looper στα JVM unit tests
+    private static Handler mainHandler() {
+        return new Handler(Looper.getMainLooper());
+    }
 
     public static void checkDiscountEligibility(
             Context context,
@@ -54,7 +58,7 @@ public final class LocationDiscountHelper {
                     shopLongitude
             );
 
-            MAIN_HANDLER.post(() -> callback.onResult(result));
+            mainHandler().post(() -> callback.onResult(result));
         });
     }
 
@@ -71,7 +75,7 @@ public final class LocationDiscountHelper {
                     ? new Coordinates(address.getLatitude(), address.getLongitude())
                     : null;
 
-            MAIN_HANDLER.post(() -> callback.onResult(coordinates));
+            mainHandler().post(() -> callback.onResult(coordinates));
         });
     }
 
